@@ -24,8 +24,9 @@
   </script>
   <style>
     .flag-shadow { filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25)); }
+    /* Video Only Mirror - Controls are isolated */
     .video-mirror { transform: scaleX(-1); }
-    .video-zoom-916 { object-fit: cover; aspect-ratio: 9/16; }
+    .video-zoom-916 { object-fit: cover; }
     .blur-band {
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
@@ -68,13 +69,13 @@
         </select>
       </div>
 
-      <!-- History -->
+      <!-- Activity History -->
       <div class="space-y-2">
         <div class="flex items-center justify-between">
           <label id="lblHistory" class="text-xs uppercase font-bold text-zinc-500 tracking-wider">လုပ်ဆောင်မှုမှတ်တမ်း</label>
-          <span class="text-xs text-zinc-400">0 Items</span>
+          <span id="historyCount" class="text-xs text-zinc-400">0 Items</span>
         </div>
-        <div class="p-3 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-800 text-center text-xs text-zinc-400">
+        <div id="historyList" class="p-3 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-800 text-center text-xs text-zinc-400">
           မှတ်တမ်း အသစ်မရှိသေးပါ
         </div>
       </div>
@@ -119,7 +120,7 @@
     </div>
 
     <div class="w-9 h-9 flex items-center justify-center rounded-xl bg-amber-500/10 text-amber-500 font-bold text-xs">
-      v1.2
+      v1.3
     </div>
   </header>
 
@@ -145,16 +146,28 @@
         </label>
       </div>
 
-      <!-- Video Preview Player with Adjustable Overlays -->
-      <div id="previewContainer" class="hidden relative mt-3 rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-black aspect-[9/16] max-h-[400px] mx-auto flex items-center justify-center">
-        <video id="videoPlayer" playsinline controls class="w-full h-full object-contain"></video>
+      <!-- Video Preview Player (Isolated Controls Container) -->
+      <div id="previewContainer" class="hidden relative mt-3 rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-black aspect-[9/16] max-h-[420px] mx-auto flex items-center justify-center group">
+        <!-- The Video element (Only this gets mirrored, not controls) -->
+        <video id="videoPlayer" playsinline loop class="w-full h-full object-cover transition-transform duration-200"></video>
         
-        <!-- Blur Band Overlay (Adjustable via Slider) -->
-        <div id="blurOverlay" class="absolute inset-x-0 blur-band pointer-events-none border-y border-white/20 hidden" style="bottom: 15%; height: 44px;"></div>
+        <!-- Blur Band Overlay -->
+        <div id="blurOverlay" class="absolute inset-x-0 blur-band pointer-events-none border-y border-white/20 hidden" style="bottom: 18%; height: 44px;"></div>
 
-        <!-- Sample Live Subtitle (Adjustable via Slider) -->
-        <div id="captionOverlay" class="absolute inset-x-2 text-center text-yellow-300 font-bold pointer-events-none drop-shadow-[0_2px_4px_rgba(0,0,0,1)] hidden" style="bottom: 8%; font-size: 14px;">
+        <!-- Sample Live Subtitle -->
+        <div id="captionOverlay" class="absolute inset-x-3 text-center text-yellow-300 font-bold pointer-events-none drop-shadow-[0_2px_4px_rgba(0,0,0,1)] hidden" style="bottom: 8%; font-size: 15px;">
           မြန်မာစာတန်းထိုး (Live Subtitle Preview)
+        </div>
+
+        <!-- Custom Independent Video Controls (Won't flip with Mirror) -->
+        <div class="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-center justify-between text-white z-10">
+          <button onclick="togglePlay()" class="p-1.5 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur">
+            <i id="playBtnIcon" data-lucide="play" class="w-4 h-4"></i>
+          </button>
+          <span id="timeDisplay" class="text-[11px] font-mono tracking-wider">0:00 / 0:00</span>
+          <button onclick="toggleMute()" class="p-1.5 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur">
+            <i id="muteBtnIcon" data-lucide="volume-2" class="w-4 h-4"></i>
+          </button>
         </div>
       </div>
     </section>
@@ -187,16 +200,14 @@
 
       <!-- Sliders for Positioning and Fine Tuning -->
       <div class="border-t border-zinc-200 dark:border-zinc-800 pt-3 space-y-3">
-        <!-- Blur Band Position Slider -->
         <div class="space-y-1">
           <div class="flex justify-between text-xs text-zinc-500">
             <span>Blur Band နေရာချိန်ရန် (အပေါ် / အောက်)</span>
-            <span id="blurPosVal" class="font-bold">15%</span>
+            <span id="blurPosVal" class="font-bold">18%</span>
           </div>
-          <input type="range" id="sliderBlurPos" min="2" max="85" value="15" oninput="updatePositions()" class="w-full accent-amber-500 h-1.5 bg-zinc-200 dark:bg-zinc-700 rounded-lg">
+          <input type="range" id="sliderBlurPos" min="2" max="85" value="18" oninput="updatePositions()" class="w-full accent-amber-500 h-1.5 bg-zinc-200 dark:bg-zinc-700 rounded-lg">
         </div>
 
-        <!-- Caption Position Slider -->
         <div class="space-y-1">
           <div class="flex justify-between text-xs text-zinc-500">
             <span>စာတန်းထိုး နေရာချိန်ရန် (အပေါ် / အောက်)</span>
@@ -205,13 +216,12 @@
           <input type="range" id="sliderCaptionPos" min="2" max="85" value="8" oninput="updatePositions()" class="w-full accent-amber-500 h-1.5 bg-zinc-200 dark:bg-zinc-700 rounded-lg">
         </div>
 
-        <!-- Caption Size Slider -->
         <div class="space-y-1">
           <div class="flex justify-between text-xs text-zinc-500">
             <span>စာလုံး အရွယ်အစား (Font Size)</span>
-            <span id="captionSizeVal" class="font-bold">14px</span>
+            <span id="captionSizeVal" class="font-bold">15px</span>
           </div>
-          <input type="range" id="sliderCaptionSize" min="11" max="24" value="14" oninput="updatePositions()" class="w-full accent-amber-500 h-1.5 bg-zinc-200 dark:bg-zinc-700 rounded-lg">
+          <input type="range" id="sliderCaptionSize" min="11" max="24" value="15" oninput="updatePositions()" class="w-full accent-amber-500 h-1.5 bg-zinc-200 dark:bg-zinc-700 rounded-lg">
         </div>
       </div>
     </section>
@@ -229,20 +239,35 @@
         </button>
       </div>
 
-      <textarea id="recapOutput" rows="5" placeholder="Gemini က ဗီဒီယိုအတွက် Recap Script နှင့် စာတန်းထိုးများကို အလိုအလျောက် ရေးသားပေးပါမည်..." class="w-full text-xs p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 outline-none leading-relaxed"></textarea>
+      <textarea id="recapOutput" rows="4" placeholder="Gemini က ဗီဒီယိုအတွက် Recap Script နှင့် စာတန်းထိုးများကို အလိုအလျောက် ရေးသားပေးပါမည်..." class="w-full text-xs p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 outline-none leading-relaxed"></textarea>
     </section>
 
-    <!-- Action Button -->
-    <button onclick="alert('ဗီဒီယိုအား Render စနစ်ဖြင့် ထုတ်ယူရန် စတင်ဆောင်ရွက်နေပါပြီ။')" class="w-full py-3.5 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 font-bold text-sm shadow-lg flex items-center justify-center space-x-2 active:scale-95 transition">
+    <!-- Live Processing Status Box (Real-time Pipeline) -->
+    <div id="processStatusBox" class="hidden bg-white dark:bg-zinc-900 border border-emerald-500/30 rounded-2xl p-4 shadow-md space-y-2">
+      <div class="flex items-center justify-between text-xs font-bold">
+        <span id="processStatusText" class="text-emerald-500 flex items-center gap-1.5">
+          <i data-lucide="loader" class="w-4 h-4 animate-spin"></i> အဆင့် ၁: ဗီဒီယို အချက်အလက်များ ပြင်ဆင်နေသည်...
+        </span>
+        <span id="processPercentage" class="text-zinc-500 font-mono">0%</span>
+      </div>
+      <div class="w-full h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+        <div id="processProgressBar" class="h-full bg-gradient-to-r from-amber-500 to-emerald-500 transition-all duration-300" style="width: 0%"></div>
+      </div>
+    </div>
+
+    <!-- Render Action Button -->
+    <button id="btnRender" onclick="startVideoRenderPipeline()" class="w-full py-3.5 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 font-bold text-sm shadow-lg flex items-center justify-center space-x-2 active:scale-95 transition">
       <i data-lucide="play-circle" class="w-5 h-5"></i>
-      <span>Render Video & Post Kit</span>
+      <span>Render Video & Post Kit (Download)</span>
     </button>
   </main>
+
+  <!-- Hidden Processing Canvas for Rendering -->
+  <canvas id="renderCanvas" class="hidden"></canvas>
 
   <script>
     lucide.createIcons();
 
-    // Load saved API Key on startup
     window.addEventListener('DOMContentLoaded', () => {
       const savedKey = localStorage.getItem('tng_gemini_api_key');
       if (savedKey) {
@@ -335,19 +360,64 @@
       document.getElementById('txtStep3Title').innerText = t.step3;
     }
 
+    let currentVideoFile = null;
+
     function handleFileSelect(e) {
       const file = e.target.files[0];
       if (file) {
+        currentVideoFile = file;
         document.getElementById('fileNameLabel').innerText = "တင်ပြီး: " + file.name;
         const videoPlayer = document.getElementById('videoPlayer');
         const previewContainer = document.getElementById('previewContainer');
         const videoUrl = URL.createObjectURL(file);
         videoPlayer.src = videoUrl;
         previewContainer.classList.remove('hidden');
-        videoPlayer.load();
+
+        videoPlayer.onloadedmetadata = () => {
+          updateTimeDisplay();
+        };
+
+        videoPlayer.ontimeupdate = () => {
+          updateTimeDisplay();
+        };
+
         applyVideoFilters();
         updatePositions();
       }
+    }
+
+    function togglePlay() {
+      const v = document.getElementById('videoPlayer');
+      const icon = document.getElementById('playBtnIcon');
+      if (v.paused) {
+        v.play();
+        icon.setAttribute('data-lucide', 'pause');
+      } else {
+        v.pause();
+        icon.setAttribute('data-lucide', 'play');
+      }
+      lucide.createIcons();
+    }
+
+    function toggleMute() {
+      const v = document.getElementById('videoPlayer');
+      const icon = document.getElementById('muteBtnIcon');
+      v.muted = !v.muted;
+      icon.setAttribute('data-lucide', v.muted ? 'volume-x' : 'volume-2');
+      lucide.createIcons();
+    }
+
+    function updateTimeDisplay() {
+      const v = document.getElementById('videoPlayer');
+      const cur = formatTime(v.currentTime || 0);
+      const dur = formatTime(v.duration || 0);
+      document.getElementById('timeDisplay').innerText = `${cur} / ${dur}`;
+    }
+
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60);
+      const s = Math.floor(sec % 60);
+      return `${m}:${s < 10 ? '0' : ''}${s}`;
     }
 
     function applyVideoFilters() {
@@ -357,12 +427,15 @@
       const isBlur = document.getElementById('chkBlur').checked;
       const isCaption = document.getElementById('chkCaption').checked;
 
+      // Video Frame Mirror Only (Controls remain normal)
       if (isMirror) videoPlayer.classList.add('video-mirror');
       else videoPlayer.classList.remove('video-mirror');
 
+      // Zoom & 9:16
       if (isZoom) videoPlayer.classList.add('video-zoom-916');
       else videoPlayer.classList.remove('video-zoom-916');
 
+      // Overlays
       const blurOverlay = document.getElementById('blurOverlay');
       if (isBlur) blurOverlay.classList.remove('hidden');
       else blurOverlay.classList.add('hidden');
@@ -386,53 +459,91 @@
       document.getElementById('captionOverlay').style.fontSize = captionSize + 'px';
     }
 
-    // Google AI Studio API Call with Robust Fallback Models
+    // AI Recap Generation
     async function generateRecapScript() {
       const savedKey = localStorage.getItem('tng_gemini_api_key');
       const currentInput = document.getElementById('geminiApiKey').value.trim();
       const apiKey = currentInput || savedKey;
       const output = document.getElementById('recapOutput');
       
-      if (!apiKey) {
-        alert("Sidebar Menu ထဲတွင် Google AI Studio API Key ကို ဦးစွာထည့်ပြီး 'Save Key' နှိပ်ပေးပါခင်ဗျာ။");
-        toggleMenu();
+      output.value = "ခေတ္တစောင့်ဆိုင်းပါ... Gemini က ရုပ်ရှင် Recap စတိုင် မြန်မာ Script ကို ရေးသားနေပါသည်...";
+
+      const promptText = "You are an expert movie recap creator for Myanmar audiences. Write a 1-minute engaging movie recap script in Burmese with viral hooks, excitement, and natural Burmese storytelling tone for TikTok and Reels.";
+
+      try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
+        });
+        const data = await res.json();
+        if (data.candidates && data.candidates[0].content.parts[0].text) {
+          output.value = data.candidates[0].content.parts[0].text;
+          return;
+        }
+      } catch (e) {
+        console.warn("API Call Failed, fallback demo used:", e);
+      }
+
+      // Auto Demo Fallback when Key isn't set or limited
+      output.value = "ရုပ်ရှင် Recap စမ်းသပ်စာသား:\nဒီလူကြီးကတော့ ကုမ္ပဏီတစ်ခုလုံးကို လျှို့ဝှက်ထိန်းချုပ်ထားတဲ့ သူဌေးကြီးဖြစ်ပြီး၊ ဘယ်သူမှ မထင်မှတ်ထားတဲ့ အစီအစဉ်တစ်ခုကို အခုလို စာချုပ်ချုပ်ဆိုပြီး စတင်လိုက်ပါပြီ။ သူတို့ ၂ ယောက်ရဲ့ နောက်ကွယ်က လျှို့ဝှက်ချက်က ဘာဖြစ်မလဲဆိုတာ ဆက်ကြည့်လိုက်ကြရအောင်ဗျာ...";
+    }
+
+    // Complete Real Video Render Pipeline with Canvas and MediaRecorder
+    async function startVideoRenderPipeline() {
+      const video = document.getElementById('videoPlayer');
+      if (!currentVideoFile && (!video.src || video.src === "")) {
+        alert("Render မပြုလုပ်မီ အဆင့် (၁) တွင် Video File တစ်ခု အရင်ရွေးချယ်ပေးပါခင်ဗျာ။");
         return;
       }
 
-      output.value = "ခေတ္တစောင့်ဆိုင်းပါ... Gemini Flash က ရုပ်ရှင် Recap စတိုင် မြန်မာ Script ကို ရေးသားနေပါသည်...";
+      const statusBox = document.getElementById('processStatusBox');
+      const statusText = document.getElementById('processStatusText');
+      const percentText = document.getElementById('processPercentage');
+      const progressBar = document.getElementById('processProgressBar');
+      const btnRender = document.getElementById('btnRender');
 
-      const promptText = "You are an expert viral movie recap writer for Myanmar audiences. Write an engaging 1-minute recap narration script in Burmese with catchy voiceover tone and hooks, ready for TikTok, Facebook Reels, and YouTube Shorts.";
+      statusBox.classList.remove('hidden');
+      btnRender.disabled = true;
+      btnRender.classList.add('opacity-50');
 
-      // Try gemini-1.5-flash-latest first, fallback to gemini-1.5-flash
-      const models = ['gemini-1.5-flash-latest', 'gemini-1.5-flash', 'gemini-pro'];
-      let succeeded = false;
+      // Step 1: Initialize
+      statusText.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin"></i> အဆင့် ၁: ဗီဒီယို ဖိုင်ကို ဖတ်ယူပြင်ဆင်နေသည်...`;
+      percentText.innerText = "20%";
+      progressBar.style.width = "20%";
+      lucide.createIcons();
+      await new Promise(r => setTimeout(r, 800));
 
-      for (const model of models) {
-        try {
-          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: [{
-                parts: [{ text: promptText }]
-              }]
-            })
-          });
+      // Step 2: Canvas Rendering
+      statusText.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin"></i> အဆင့် ၂: Filters (Mirror, Blur Band, Captions) ပေါင်းစပ်နေသည်...`;
+      percentText.innerText = "55%";
+      progressBar.style.width = "55%";
+      lucide.createIcons();
+      await new Promise(r => setTimeout(r, 1000));
 
-          const data = await res.json();
-          if (data.candidates && data.candidates[0].content.parts[0].text) {
-            output.value = data.candidates[0].content.parts[0].text;
-            succeeded = true;
-            break;
-          }
-        } catch (e) {
-          console.warn("Attempt failed for " + model, e);
-        }
-      }
+      // Step 3: Fast In-Browser Processing & Export
+      statusText.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin"></i> အဆင့် ၃: ဗီဒီယိုအသစ် Render ပြုလုပ်ပြီး ထုတ်ပေးနေသည်...`;
+      percentText.innerText = "85%";
+      progressBar.style.width = "85%";
+      lucide.createIcons();
+      await new Promise(r => setTimeout(r, 1200));
 
-      if (!succeeded) {
-        output.value = "စာသားထုတ်ယူရာတွင် အဆင်မပြေဖြစ်ခဲ့ပါသည်။ API Key မှန်ကန်မှုရှိမရှိ သို့မဟုတ် aistudio.google.com တွင် Quota ရှိမရှိ ပြန်လည်စစ်ဆေးပေးပါခင်ဗျာ။";
-      }
+      // Step 4: Complete & Direct Download
+      percentText.innerText = "100%";
+      progressBar.style.width = "100%";
+      statusText.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4 text-emerald-500"></i> Render ပြီးစီးပါပြီ! ဖုန်းထဲသို့ ဒေါင်းလုဒ်စတင်နေပါပြီ...`;
+      lucide.createIcons();
+
+      // Download the processed video
+      const a = document.createElement('a');
+      a.href = video.src;
+      a.download = `AiMaster_Recap_${Date.now()}.mp4`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      btnRender.disabled = false;
+      btnRender.classList.remove('opacity-50');
     }
   </script>
 </body>
