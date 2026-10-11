@@ -23,8 +23,14 @@
     }
   </script>
   <style>
-    .flag-shadow {
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25));
+    .flag-shadow { filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25)); }
+    /* Preview Effects */
+    .video-mirror { transform: scaleX(-1); }
+    .video-zoom-916 { object-fit: cover; aspect-ratio: 9/16; }
+    .blur-band {
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      background: rgba(0, 0, 0, 0.4);
     }
   </style>
 </head>
@@ -67,9 +73,9 @@
       <div class="space-y-2">
         <div class="flex items-center justify-between">
           <label id="lblHistory" class="text-xs uppercase font-bold text-zinc-500 tracking-wider">လုပ်ဆောင်မှုမှတ်တမ်း</label>
-          <span class="text-xs text-zinc-400">0 Items</span>
+          <span id="historyCount" class="text-xs text-zinc-400">0 Items</span>
         </div>
-        <div class="p-3 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-800 text-center text-xs text-zinc-400">
+        <div id="historyList" class="p-3 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-800 text-center text-xs text-zinc-400">
           မှတ်တမ်း အသစ်မရှိသေးပါ
         </div>
       </div>
@@ -84,27 +90,21 @@
 
   <!-- Top Navigation Header -->
   <header class="sticky top-0 z-30 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 px-4 py-3 flex items-center justify-between">
-    <!-- Left Menu Button -->
     <button onclick="toggleMenu()" class="p-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition">
       <i data-lucide="menu" class="w-5 h-5 text-zinc-800 dark:text-zinc-200"></i>
     </button>
 
     <!-- Center App Branding with Shan Flags -->
     <div class="flex items-center space-x-2">
-      <!-- Shan Flag (Left) -->
       <svg class="w-6 h-4 rounded-sm flag-shadow overflow-hidden" viewBox="0 0 900 600">
         <rect width="900" height="200" fill="#FFDE00"/>
         <rect y="200" width="900" height="200" fill="#009933"/>
         <rect y="400" width="900" height="200" fill="#CC0000"/>
         <circle cx="450" cy="300" r="130" fill="#FFFFFF"/>
       </svg>
-
-      <!-- App Title -->
       <h1 class="text-base sm:text-lg font-black tracking-tight bg-gradient-to-r from-amber-500 via-emerald-500 to-rose-500 bg-clip-text text-transparent">
         Ai Master TNG Recap
       </h1>
-
-      <!-- Shan Flag (Right) -->
       <svg class="w-6 h-4 rounded-sm flag-shadow overflow-hidden" viewBox="0 0 900 600">
         <rect width="900" height="200" fill="#FFDE00"/>
         <rect y="200" width="900" height="200" fill="#009933"/>
@@ -113,9 +113,8 @@
       </svg>
     </div>
 
-    <!-- Quick Status / Info -->
     <div class="w-9 h-9 flex items-center justify-center rounded-xl bg-amber-500/10 text-amber-500 font-bold text-xs">
-      v1.0
+      v1.1
     </div>
   </header>
 
@@ -132,11 +131,27 @@
       <div class="space-y-2">
         <input id="inputVideoUrl" type="url" placeholder="TikTok / YouTube / FB Reel Link ကူးထည့်ပါ" class="w-full text-sm p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 outline-none focus:border-emerald-500">
         <div class="text-center text-xs text-zinc-400 font-semibold">— (သို့မဟုတ်) —</div>
-        <label class="flex flex-col items-center justify-center border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-xl p-4 cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/40">
-          <i data-lucide="upload-cloud" class="w-6 h-6 text-zinc-400 mb-1"></i>
-          <span class="text-xs font-medium text-zinc-500">ဖုန်းထဲမှ Video File ရွေးပါ</span>
-          <input type="file" accept="video/*" class="hidden" onchange="handleFileSelect(event)">
+        
+        <!-- Video Upload Box -->
+        <label id="uploadArea" class="flex flex-col items-center justify-center border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-xl p-4 cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition">
+          <i data-lucide="upload-cloud" class="w-7 h-7 text-emerald-500 mb-1"></i>
+          <span id="fileNameLabel" class="text-xs font-medium text-zinc-600 dark:text-zinc-300">ဖုန်းထဲမှ Video File ရွေးပါ</span>
+          <span class="text-[10px] text-zinc-400 mt-0.5">MP4, WebM, MOV လက်ခံပါသည်</span>
+          <input type="file" id="videoFileInput" accept="video/*" class="hidden" onchange="handleFileSelect(event)">
         </label>
+      </div>
+
+      <!-- Video Preview Player (Hidden until uploaded) -->
+      <div id="previewContainer" class="hidden relative mt-3 rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-black aspect-[9/16] max-h-[380px] mx-auto flex items-center justify-center">
+        <video id="videoPlayer" playsinline controls class="w-full h-full object-contain"></video>
+        
+        <!-- Blur Band Overlay -->
+        <div id="blurOverlay" class="absolute bottom-12 inset-x-0 h-10 blur-band pointer-events-none border-y border-white/10 hidden"></div>
+
+        <!-- Sample Live Subtitle -->
+        <div id="captionOverlay" class="absolute bottom-4 inset-x-2 text-center text-yellow-300 font-bold text-xs pointer-events-none drop-shadow-[0_2px_2px_rgba(0,0,0,0.9)] hidden">
+          မြန်မာစာတန်းထိုး (Live Subtitle Preview)
+        </div>
       </div>
     </section>
 
@@ -149,19 +164,19 @@
 
       <div class="grid grid-cols-2 gap-2 text-xs">
         <label class="flex items-center p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 space-x-2 cursor-pointer bg-zinc-50 dark:bg-zinc-800/40">
-          <input type="checkbox" id="chkMirror" checked class="rounded text-emerald-500">
+          <input type="checkbox" id="chkMirror" onchange="applyVideoFilters()" class="rounded text-emerald-500">
           <span>Mirror Flip (ဘယ်/ညာ)</span>
         </label>
         <label class="flex items-center p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 space-x-2 cursor-pointer bg-zinc-50 dark:bg-zinc-800/40">
-          <input type="checkbox" id="chkZoom" checked class="rounded text-emerald-500">
+          <input type="checkbox" id="chkZoom" onchange="applyVideoFilters()" class="rounded text-emerald-500">
           <span>Zoom & 9:16 Crop</span>
         </label>
         <label class="flex items-center p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 space-x-2 cursor-pointer bg-zinc-50 dark:bg-zinc-800/40">
-          <input type="checkbox" id="chkBlur" checked class="rounded text-emerald-500">
+          <input type="checkbox" id="chkBlur" onchange="applyVideoFilters()" class="rounded text-emerald-500">
           <span>Subtitle Blur Band</span>
         </label>
         <label class="flex items-center p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 space-x-2 cursor-pointer bg-zinc-50 dark:bg-zinc-800/40">
-          <input type="checkbox" id="chkCaption" checked class="rounded text-emerald-500">
+          <input type="checkbox" id="chkCaption" onchange="applyVideoFilters()" checked class="rounded text-emerald-500">
           <span>Burmese Captions</span>
         </label>
       </div>
@@ -184,17 +199,15 @@
     </section>
 
     <!-- Action Button -->
-    <button class="w-full py-3.5 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 font-bold text-sm shadow-lg flex items-center justify-center space-x-2 active:scale-95 transition">
+    <button onclick="alert('ဗီဒီယိုအား Render စနစ်ဖြင့် လုပ်ဆောင်ရန် အဆင်သင့်ဖြစ်ပါပြီ။')" class="w-full py-3.5 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 font-bold text-sm shadow-lg flex items-center justify-center space-x-2 active:scale-95 transition">
       <i data-lucide="play-circle" class="w-5 h-5"></i>
       <span>Render Video & Post Kit</span>
     </button>
   </main>
 
   <script>
-    // Initialize Icons
     lucide.createIcons();
 
-    // Menu Toggle
     function toggleMenu() {
       const sidebar = document.getElementById('sidebar');
       const overlay = document.getElementById('drawerOverlay');
@@ -208,7 +221,6 @@
       }
     }
 
-    // Theme Toggle
     function toggleTheme() {
       const html = document.documentElement;
       const isDark = html.classList.toggle('dark');
@@ -217,7 +229,6 @@
       lucide.createIcons();
     }
 
-    // Multi-Language Strings
     const translations = {
       mm: {
         menuTitle: "သတ်မှတ်ချက်များ (Menu)",
@@ -268,7 +279,64 @@
       document.getElementById('txtStep3Title').innerText = t.step3;
     }
 
-    // Google AI Studio (Gemini 1.5 Flash) API Call Example
+    // Video Selection and Preview Handler
+    function handleFileSelect(e) {
+      const file = e.target.files[0];
+      if (file) {
+        document.getElementById('fileNameLabel').innerText = "တင်ပြီး: " + file.name;
+        
+        const videoPlayer = document.getElementById('videoPlayer');
+        const previewContainer = document.getElementById('previewContainer');
+        
+        const videoUrl = URL.createObjectURL(file);
+        videoPlayer.src = videoUrl;
+        previewContainer.classList.remove('hidden');
+        videoPlayer.load();
+
+        applyVideoFilters();
+      }
+    }
+
+    // Apply Live Filters (Mirror, Crop, Blur Band, Captions)
+    function applyVideoFilters() {
+      const videoPlayer = document.getElementById('videoPlayer');
+      const isMirror = document.getElementById('chkMirror').checked;
+      const isZoom = document.getElementById('chkZoom').checked;
+      const isBlur = document.getElementById('chkBlur').checked;
+      const isCaption = document.getElementById('chkCaption').checked;
+
+      // Mirror
+      if (isMirror) {
+        videoPlayer.classList.add('video-mirror');
+      } else {
+        videoPlayer.classList.remove('video-mirror');
+      }
+
+      // Zoom & 9:16 Crop
+      if (isZoom) {
+        videoPlayer.classList.add('video-zoom-916');
+      } else {
+        videoPlayer.classList.remove('video-zoom-916');
+      }
+
+      // Blur Band
+      const blurOverlay = document.getElementById('blurOverlay');
+      if (isBlur) {
+        blurOverlay.classList.remove('hidden');
+      } else {
+        blurOverlay.classList.add('hidden');
+      }
+
+      // Caption Overlay
+      const captionOverlay = document.getElementById('captionOverlay');
+      if (isCaption) {
+        captionOverlay.classList.remove('hidden');
+      } else {
+        captionOverlay.classList.add('hidden');
+      }
+    }
+
+    // Google AI Studio (Gemini 1.5 Flash) API Call
     async function generateRecapScript() {
       const apiKey = document.getElementById('geminiApiKey').value;
       const output = document.getElementById('recapOutput');
@@ -302,12 +370,6 @@
         }
       } catch (err) {
         output.value = "Error: " + err.message;
-      }
-    }
-
-    function handleFileSelect(e) {
-      if (e.target.files.length > 0) {
-        alert("ဗီဒီယိုဖိုင် ရွေးချယ်ပြီးပါပြီ: " + e.target.files[0].name);
       }
     }
   </script>
