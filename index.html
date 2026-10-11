@@ -24,13 +24,12 @@
   </script>
   <style>
     .flag-shadow { filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25)); }
-    /* Preview Effects */
     .video-mirror { transform: scaleX(-1); }
     .video-zoom-916 { object-fit: cover; aspect-ratio: 9/16; }
     .blur-band {
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      background: rgba(0, 0, 0, 0.45);
     }
   </style>
 </head>
@@ -73,18 +72,24 @@
       <div class="space-y-2">
         <div class="flex items-center justify-between">
           <label id="lblHistory" class="text-xs uppercase font-bold text-zinc-500 tracking-wider">လုပ်ဆောင်မှုမှတ်တမ်း</label>
-          <span id="historyCount" class="text-xs text-zinc-400">0 Items</span>
+          <span class="text-xs text-zinc-400">0 Items</span>
         </div>
-        <div id="historyList" class="p-3 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-800 text-center text-xs text-zinc-400">
+        <div class="p-3 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-800 text-center text-xs text-zinc-400">
           မှတ်တမ်း အသစ်မရှိသေးပါ
         </div>
       </div>
     </div>
 
-    <!-- Google AI Studio Key Entry -->
-    <div class="border-t border-zinc-200 dark:border-zinc-800 pt-3">
-      <label class="text-xs font-semibold text-zinc-500 block mb-1">Google AI Studio API Key</label>
-      <input id="geminiApiKey" type="password" placeholder="AIzaSy..." class="w-full text-xs p-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 outline-none">
+    <!-- Google AI Studio Key Entry with Save Feature -->
+    <div class="border-t border-zinc-200 dark:border-zinc-800 pt-3 space-y-2">
+      <div class="flex items-center justify-between">
+        <label class="text-xs font-semibold text-zinc-500">Google AI Studio API Key</label>
+        <span id="keyStatusText" class="text-[10px] text-zinc-400"></span>
+      </div>
+      <input id="geminiApiKey" type="password" placeholder="AIzaSy..." class="w-full text-xs p-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 outline-none focus:border-emerald-500">
+      <button onclick="saveApiKey()" class="w-full py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow transition">
+        Key သိမ်းဆည်းမည် (Save Key)
+      </button>
     </div>
   </aside>
 
@@ -114,7 +119,7 @@
     </div>
 
     <div class="w-9 h-9 flex items-center justify-center rounded-xl bg-amber-500/10 text-amber-500 font-bold text-xs">
-      v1.1
+      v1.2
     </div>
   </header>
 
@@ -132,7 +137,6 @@
         <input id="inputVideoUrl" type="url" placeholder="TikTok / YouTube / FB Reel Link ကူးထည့်ပါ" class="w-full text-sm p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 outline-none focus:border-emerald-500">
         <div class="text-center text-xs text-zinc-400 font-semibold">— (သို့မဟုတ်) —</div>
         
-        <!-- Video Upload Box -->
         <label id="uploadArea" class="flex flex-col items-center justify-center border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-xl p-4 cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition">
           <i data-lucide="upload-cloud" class="w-7 h-7 text-emerald-500 mb-1"></i>
           <span id="fileNameLabel" class="text-xs font-medium text-zinc-600 dark:text-zinc-300">ဖုန်းထဲမှ Video File ရွေးပါ</span>
@@ -141,22 +145,22 @@
         </label>
       </div>
 
-      <!-- Video Preview Player (Hidden until uploaded) -->
-      <div id="previewContainer" class="hidden relative mt-3 rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-black aspect-[9/16] max-h-[380px] mx-auto flex items-center justify-center">
+      <!-- Video Preview Player with Adjustable Overlays -->
+      <div id="previewContainer" class="hidden relative mt-3 rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-black aspect-[9/16] max-h-[400px] mx-auto flex items-center justify-center">
         <video id="videoPlayer" playsinline controls class="w-full h-full object-contain"></video>
         
-        <!-- Blur Band Overlay -->
-        <div id="blurOverlay" class="absolute bottom-12 inset-x-0 h-10 blur-band pointer-events-none border-y border-white/10 hidden"></div>
+        <!-- Blur Band Overlay (Adjustable via Slider) -->
+        <div id="blurOverlay" class="absolute inset-x-0 blur-band pointer-events-none border-y border-white/20 hidden" style="bottom: 15%; height: 44px;"></div>
 
-        <!-- Sample Live Subtitle -->
-        <div id="captionOverlay" class="absolute bottom-4 inset-x-2 text-center text-yellow-300 font-bold text-xs pointer-events-none drop-shadow-[0_2px_2px_rgba(0,0,0,0.9)] hidden">
+        <!-- Sample Live Subtitle (Adjustable via Slider) -->
+        <div id="captionOverlay" class="absolute inset-x-2 text-center text-yellow-300 font-bold pointer-events-none drop-shadow-[0_2px_4px_rgba(0,0,0,1)] hidden" style="bottom: 8%; font-size: 14px;">
           မြန်မာစာတန်းထိုး (Live Subtitle Preview)
         </div>
       </div>
     </section>
 
-    <!-- Step 2: Settings & Tools -->
-    <section class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-sm space-y-3">
+    <!-- Step 2: Settings & Fine Tuning -->
+    <section class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-sm space-y-4">
       <div class="flex items-center space-x-2 text-sm font-bold">
         <span class="w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs">2</span>
         <span id="txtStep2Title">Recap & Copyright Settings</span>
@@ -168,17 +172,47 @@
           <span>Mirror Flip (ဘယ်/ညာ)</span>
         </label>
         <label class="flex items-center p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 space-x-2 cursor-pointer bg-zinc-50 dark:bg-zinc-800/40">
-          <input type="checkbox" id="chkZoom" onchange="applyVideoFilters()" class="rounded text-emerald-500">
+          <input type="checkbox" id="chkZoom" onchange="applyVideoFilters()" checked class="rounded text-emerald-500">
           <span>Zoom & 9:16 Crop</span>
         </label>
         <label class="flex items-center p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 space-x-2 cursor-pointer bg-zinc-50 dark:bg-zinc-800/40">
-          <input type="checkbox" id="chkBlur" onchange="applyVideoFilters()" class="rounded text-emerald-500">
+          <input type="checkbox" id="chkBlur" onchange="applyVideoFilters()" checked class="rounded text-emerald-500">
           <span>Subtitle Blur Band</span>
         </label>
         <label class="flex items-center p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 space-x-2 cursor-pointer bg-zinc-50 dark:bg-zinc-800/40">
           <input type="checkbox" id="chkCaption" onchange="applyVideoFilters()" checked class="rounded text-emerald-500">
           <span>Burmese Captions</span>
         </label>
+      </div>
+
+      <!-- Sliders for Positioning and Fine Tuning -->
+      <div class="border-t border-zinc-200 dark:border-zinc-800 pt-3 space-y-3">
+        <!-- Blur Band Position Slider -->
+        <div class="space-y-1">
+          <div class="flex justify-between text-xs text-zinc-500">
+            <span>Blur Band နေရာချိန်ရန် (အပေါ် / အောက်)</span>
+            <span id="blurPosVal" class="font-bold">15%</span>
+          </div>
+          <input type="range" id="sliderBlurPos" min="2" max="85" value="15" oninput="updatePositions()" class="w-full accent-amber-500 h-1.5 bg-zinc-200 dark:bg-zinc-700 rounded-lg">
+        </div>
+
+        <!-- Caption Position Slider -->
+        <div class="space-y-1">
+          <div class="flex justify-between text-xs text-zinc-500">
+            <span>စာတန်းထိုး နေရာချိန်ရန် (အပေါ် / အောက်)</span>
+            <span id="captionPosVal" class="font-bold">8%</span>
+          </div>
+          <input type="range" id="sliderCaptionPos" min="2" max="85" value="8" oninput="updatePositions()" class="w-full accent-amber-500 h-1.5 bg-zinc-200 dark:bg-zinc-700 rounded-lg">
+        </div>
+
+        <!-- Caption Size Slider -->
+        <div class="space-y-1">
+          <div class="flex justify-between text-xs text-zinc-500">
+            <span>စာလုံး အရွယ်အစား (Font Size)</span>
+            <span id="captionSizeVal" class="font-bold">14px</span>
+          </div>
+          <input type="range" id="sliderCaptionSize" min="11" max="24" value="14" oninput="updatePositions()" class="w-full accent-amber-500 h-1.5 bg-zinc-200 dark:bg-zinc-700 rounded-lg">
+        </div>
       </div>
     </section>
 
@@ -189,17 +223,17 @@
           <span class="w-6 h-6 rounded-full bg-rose-500 text-white flex items-center justify-center text-xs">3</span>
           <span id="txtStep3Title">AI Movie Recap စာသားဖန်တီးမှု</span>
         </div>
-        <button onclick="generateRecapScript()" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-rose-500 text-white text-xs font-bold shadow hover:opacity-95 flex items-center space-x-1">
+        <button onclick="generateRecapScript()" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-rose-500 text-white text-xs font-bold shadow hover:opacity-95 flex items-center space-x-1 active:scale-95 transition">
           <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
           <span>Generate</span>
         </button>
       </div>
 
-      <textarea id="recapOutput" rows="4" placeholder="Gemini က Recap Script နှင့် စာတန်းထိုးများကို အလိုအလျောက် ရေးသားပေးပါမည်..." class="w-full text-xs p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 outline-none leading-relaxed"></textarea>
+      <textarea id="recapOutput" rows="5" placeholder="Gemini က ဗီဒီယိုအတွက် Recap Script နှင့် စာတန်းထိုးများကို အလိုအလျောက် ရေးသားပေးပါမည်..." class="w-full text-xs p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 outline-none leading-relaxed"></textarea>
     </section>
 
     <!-- Action Button -->
-    <button onclick="alert('ဗီဒီယိုအား Render စနစ်ဖြင့် လုပ်ဆောင်ရန် အဆင်သင့်ဖြစ်ပါပြီ။')" class="w-full py-3.5 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 font-bold text-sm shadow-lg flex items-center justify-center space-x-2 active:scale-95 transition">
+    <button onclick="alert('ဗီဒီယိုအား Render စနစ်ဖြင့် ထုတ်ယူရန် စတင်ဆောင်ရွက်နေပါပြီ။')" class="w-full py-3.5 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 font-bold text-sm shadow-lg flex items-center justify-center space-x-2 active:scale-95 transition">
       <i data-lucide="play-circle" class="w-5 h-5"></i>
       <span>Render Video & Post Kit</span>
     </button>
@@ -207,6 +241,28 @@
 
   <script>
     lucide.createIcons();
+
+    // Load saved API Key on startup
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedKey = localStorage.getItem('tng_gemini_api_key');
+      if (savedKey) {
+        document.getElementById('geminiApiKey').value = savedKey;
+        document.getElementById('keyStatusText').innerText = "✓ သိမ်းဆည်းထားပြီး";
+        document.getElementById('keyStatusText').classList.add('text-emerald-500');
+      }
+    });
+
+    function saveApiKey() {
+      const key = document.getElementById('geminiApiKey').value.trim();
+      if (!key) {
+        alert("API Key ထည့်ပေးပါခင်ဗျာ။");
+        return;
+      }
+      localStorage.setItem('tng_gemini_api_key', key);
+      document.getElementById('keyStatusText').innerText = "✓ သိမ်းဆည်းပြီး";
+      document.getElementById('keyStatusText').classList.add('text-emerald-500');
+      alert("API Key ကို ဖုန်းထဲတွင် အောင်မြင်စွာ သိမ်းဆည်းပြီးပါပြီ!");
+    }
 
     function toggleMenu() {
       const sidebar = document.getElementById('sidebar');
@@ -279,25 +335,21 @@
       document.getElementById('txtStep3Title').innerText = t.step3;
     }
 
-    // Video Selection and Preview Handler
     function handleFileSelect(e) {
       const file = e.target.files[0];
       if (file) {
         document.getElementById('fileNameLabel').innerText = "တင်ပြီး: " + file.name;
-        
         const videoPlayer = document.getElementById('videoPlayer');
         const previewContainer = document.getElementById('previewContainer');
-        
         const videoUrl = URL.createObjectURL(file);
         videoPlayer.src = videoUrl;
         previewContainer.classList.remove('hidden');
         videoPlayer.load();
-
         applyVideoFilters();
+        updatePositions();
       }
     }
 
-    // Apply Live Filters (Mirror, Crop, Blur Band, Captions)
     function applyVideoFilters() {
       const videoPlayer = document.getElementById('videoPlayer');
       const isMirror = document.getElementById('chkMirror').checked;
@@ -305,71 +357,81 @@
       const isBlur = document.getElementById('chkBlur').checked;
       const isCaption = document.getElementById('chkCaption').checked;
 
-      // Mirror
-      if (isMirror) {
-        videoPlayer.classList.add('video-mirror');
-      } else {
-        videoPlayer.classList.remove('video-mirror');
-      }
+      if (isMirror) videoPlayer.classList.add('video-mirror');
+      else videoPlayer.classList.remove('video-mirror');
 
-      // Zoom & 9:16 Crop
-      if (isZoom) {
-        videoPlayer.classList.add('video-zoom-916');
-      } else {
-        videoPlayer.classList.remove('video-zoom-916');
-      }
+      if (isZoom) videoPlayer.classList.add('video-zoom-916');
+      else videoPlayer.classList.remove('video-zoom-916');
 
-      // Blur Band
       const blurOverlay = document.getElementById('blurOverlay');
-      if (isBlur) {
-        blurOverlay.classList.remove('hidden');
-      } else {
-        blurOverlay.classList.add('hidden');
-      }
+      if (isBlur) blurOverlay.classList.remove('hidden');
+      else blurOverlay.classList.add('hidden');
 
-      // Caption Overlay
       const captionOverlay = document.getElementById('captionOverlay');
-      if (isCaption) {
-        captionOverlay.classList.remove('hidden');
-      } else {
-        captionOverlay.classList.add('hidden');
-      }
+      if (isCaption) captionOverlay.classList.remove('hidden');
+      else captionOverlay.classList.add('hidden');
     }
 
-    // Google AI Studio (Gemini 1.5 Flash) API Call
+    function updatePositions() {
+      const blurPos = document.getElementById('sliderBlurPos').value;
+      const captionPos = document.getElementById('sliderCaptionPos').value;
+      const captionSize = document.getElementById('sliderCaptionSize').value;
+
+      document.getElementById('blurPosVal').innerText = blurPos + '%';
+      document.getElementById('captionPosVal').innerText = captionPos + '%';
+      document.getElementById('captionSizeVal').innerText = captionSize + 'px';
+
+      document.getElementById('blurOverlay').style.bottom = blurPos + '%';
+      document.getElementById('captionOverlay').style.bottom = captionPos + '%';
+      document.getElementById('captionOverlay').style.fontSize = captionSize + 'px';
+    }
+
+    // Google AI Studio API Call with Robust Fallback Models
     async function generateRecapScript() {
-      const apiKey = document.getElementById('geminiApiKey').value;
+      const savedKey = localStorage.getItem('tng_gemini_api_key');
+      const currentInput = document.getElementById('geminiApiKey').value.trim();
+      const apiKey = currentInput || savedKey;
       const output = document.getElementById('recapOutput');
       
       if (!apiKey) {
-        alert("Sidebar Menu ထဲတွင် Google AI Studio API Key ကို ဦးစွာထည့်သွင်းပေးပါခင်ဗျာ။");
+        alert("Sidebar Menu ထဲတွင် Google AI Studio API Key ကို ဦးစွာထည့်ပြီး 'Save Key' နှိပ်ပေးပါခင်ဗျာ။");
         toggleMenu();
         return;
       }
 
-      output.value = "ခေတ္တစောင့်ဆိုင်းပါ... Gemini က စာသားများကို သုံးသပ်ပြီး Recap စတိုင် မြန်မာ script ရေးစပ်နေပါသည်...";
+      output.value = "ခေတ္တစောင့်ဆိုင်းပါ... Gemini Flash က ရုပ်ရှင် Recap စတိုင် မြန်မာ Script ကို ရေးသားနေပါသည်...";
 
-      try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{
-              parts: [{
-                text: "You are an expert viral movie recap writer for Myanmar audiences. Write an engaging 1-minute recap script in Burmese with catchy voiceover tone and hooks, ready for TikTok and Reels."
+      const promptText = "You are an expert viral movie recap writer for Myanmar audiences. Write an engaging 1-minute recap narration script in Burmese with catchy voiceover tone and hooks, ready for TikTok, Facebook Reels, and YouTube Shorts.";
+
+      // Try gemini-1.5-flash-latest first, fallback to gemini-1.5-flash
+      const models = ['gemini-1.5-flash-latest', 'gemini-1.5-flash', 'gemini-pro'];
+      let succeeded = false;
+
+      for (const model of models) {
+        try {
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{
+                parts: [{ text: promptText }]
               }]
-            }]
-          })
-        });
+            })
+          });
 
-        const data = await response.json();
-        if (data.candidates && data.candidates[0].content.parts[0].text) {
-          output.value = data.candidates[0].content.parts[0].text;
-        } else {
-          output.value = "စာသားထုတ်ယူရာတွင် အမှားအယွင်းဖြစ်ပေါ်ခဲ့ပါသည်- " + JSON.stringify(data);
+          const data = await res.json();
+          if (data.candidates && data.candidates[0].content.parts[0].text) {
+            output.value = data.candidates[0].content.parts[0].text;
+            succeeded = true;
+            break;
+          }
+        } catch (e) {
+          console.warn("Attempt failed for " + model, e);
         }
-      } catch (err) {
-        output.value = "Error: " + err.message;
+      }
+
+      if (!succeeded) {
+        output.value = "စာသားထုတ်ယူရာတွင် အဆင်မပြေဖြစ်ခဲ့ပါသည်။ API Key မှန်ကန်မှုရှိမရှိ သို့မဟုတ် aistudio.google.com တွင် Quota ရှိမရှိ ပြန်လည်စစ်ဆေးပေးပါခင်ဗျာ။";
       }
     }
   </script>
