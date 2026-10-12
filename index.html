@@ -524,16 +524,18 @@
       const text = document.getElementById('recapText');
       text.value = "Audio STT Extracting... \nGemini API Translating... \n\n'မင်္ဂလာပါ၊ ဒီဗီဒီယိုလေးမှာတော့ မမျှော်လင့်ထားတဲ့ အဖြစ်အပျက်လေးတစ်ခုကို တွေ့ရမှာပါ။ ဘာဆက်ဖြစ်မလဲ ဆက်ကြည့်ရအောင်...'";
     }
-
                     async function startRealRender() {
       const fileInput = document.getElementById('videoInput');
       const file = fileInput.files[0];
       if (!file) { alert("ဗီဒီယိုအရင်ရွေးပါ"); return; }
       
+      const geminiKey = document.getElementById('geminiKey').value || "no_key";
+      
       const ratio = document.getElementById('aspectRatio').value;
       const innerCrop = document.getElementById('innerCropRatio').value; 
       const blurPos = document.getElementById('valBlurPos').value;
       const blurHeight = document.getElementById('valBlurHeight').value; 
+      
       const zoom = document.getElementById('valZoom').value;
       const panY = document.getElementById('valPanY').value;
       const bri = document.getElementById('valBri').value;
@@ -541,11 +543,10 @@
       const sat = document.getElementById('valSat').value;
       const flip = isFlipped.toString(); 
       
-      // စာသားအလွတ်ဖြစ်နေပါက Preview စာသားကို အလိုလို ထည့်ပေးမည်
-      let recapText = document.getElementById('recapText').value;
-      if (!recapText || recapText.trim() === "") {
-          recapText = "မြန်မာစာတန်းထိုး (Preview)";
-      }
+      const ttsVoice = document.querySelector('input[name="ttsVoice"]:checked').value;
+      
+      // စာသားအချက်အလက်များ အသစ်ဖမ်းယူခြင်း
+      const recapText = document.getElementById('recapText').value;
       const textPos = document.getElementById('valTextPos').value;
       const textSize = document.getElementById('valTextSize').value;
       const textColor = document.getElementById('valTextColor').value;
@@ -558,21 +559,26 @@
       
       btn.classList.add('hidden');
       pBox.classList.remove('hidden');
-      pStat.innerText = "Server ပေါ်သို့ တင်၍ Render ပြုလုပ်နေပါသည် (၁ မိနစ်ခန့်သာ စောင့်ပါ)...";
+      pStat.innerText = "Server ပေါ်သို့ တင်၍ Render ပြုလုပ်နေပါသည် (၁ မိနစ်ခန့် စောင့်ပါ)...";
       pBar.style.width = "50%"; 
 
       const formData = new FormData();
       formData.append("video", file);
+      formData.append("gemini_key", geminiKey);
+      formData.append("tts_voice", ttsVoice);
       formData.append("ratio", ratio);
       formData.append("inner_crop", innerCrop);
       formData.append("blur_pos", blurPos);
       formData.append("blur_height", blurHeight);
+      
       formData.append("zoom", zoom);
       formData.append("pan_y", panY);
       formData.append("bri", bri);
       formData.append("con", con);
       formData.append("sat", sat);
       formData.append("flip", flip);
+      
+      // ဆာဗာသို့ စာသားအချက်အလက်များ လှမ်းပို့ခြင်း
       formData.append("recap_text", recapText);
       formData.append("text_pos", textPos);
       formData.append("text_size", textSize);
@@ -602,7 +608,7 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `AiMaster_Final_${Date.now()}.mp4`;
+        a.download = `AiMaster_Rendered_${Date.now()}.mp4`;
         a.click();
         
         alert("Render အောင်မြင်စွာ ပြီးဆုံးပါပြီ။");
@@ -615,7 +621,7 @@
         btn.classList.remove('hidden');
         pBox.classList.add('hidden');
       }
-    }
+    }  
   </script>
 </body>
 </html>
