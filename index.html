@@ -497,12 +497,19 @@
     // ==========================================
     // THE REAL RENDER ENGINE (Canvas -> WebM)
     // ==========================================
+        // ==========================================
+    // REAL RENDER ENGINE (Connected to Server)
+    // ==========================================
     async function startRealRender() {
-      if (!srcVideo.src || currentVideoDuration === 0) { alert("ဗီဒီယိုအရင်ရွေးပါ"); return; }
+      const fileInput = document.getElementById('videoInput');
+      const file = fileInput.files[0];
+      if (!file) { alert("ဗီဒီယိုအရင်ရွေးပါ"); return; }
       
-      isRendering = true;
-      cancelAnimationFrame(reqAnimFrame); 
+      const geminiKey = document.getElementById('geminiKey').value || "no_key";
+      const blurPos = document.getElementById('valBlurPos').value;
+      const ttsVoice = document.querySelector('input[name="ttsVoice"]:checked').value;
 
+      isRendering = true;
       const btn = document.getElementById('btnRenderStart');
       const pBox = document.getElementById('renderProgress');
       const pBar = document.getElementById('renderBar');
@@ -510,60 +517,47 @@
       
       btn.classList.add('hidden');
       pBox.classList.remove('hidden');
-      pBar.style.width = "0%";
+      pStat.innerText = "Server ပေါ်သို့ တင်၍ Render ပြုလုပ်နေပါသည် (၁ မိနစ်ခန့် စောင့်ပါ)...";
+      pBar.style.width = "50%"; // Uploading state
 
-      const stream = previewCanvas.captureStream(30); 
-      
-      // Simulate Voiceover during render
-      const textVal = document.getElementById('recapText').value || "မြန်မာစာတန်းထိုးအသစ် ထည့်သွင်းနေပါသည်";
-      const msg = new SpeechSynthesisUtterance(textVal);
-      msg.pitch = document.getElementById('valPitch').value;
-      msg.rate = document.getElementById('valSpeed').value;
-      
-      const recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
-      const chunks = [];
-      recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
-      
-      recorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'video/webm' });
+      const formData = new FormData();
+      formData.append("video", file);
+      formData.append("gemini_key", geminiKey);
+      formData.append("tts_voice", ttsVoice);
+      formData.append("blur_pos", blurPos);
+
+      try {
+        // သင့်ရဲ့ ကိုယ်ပိုင် ဆာဗာသို့ လှမ်းပို့ခြင်း
+        const response = await fetch("https://ai-master-backend-2zwp.onrender.com/render", {
+          method: "POST",
+          body: formData
+        });
+
+        if (!response.ok) {
+          throw new Error("Server error: " + response.statusText);
+        }
+
+        pStat.innerText = "Video ရရှိပါပြီ! ဒေါင်းလုဒ်လုပ်နေပါသည်...";
+        pBar.style.width = "100%";
+
+        // ဆာဗာမှ ပြန်ပို့ပေးသော Render လုပ်ပြီးသား Video ကို လက်ခံရယူခြင်း
+        const blob = await response.blob();
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `AiMaster_Rendered_${Date.now()}.webm`;
+        a.download = `AiMaster_Rendered_${Date.now()}.mp4`;
         a.click();
         
+        alert("Render အောင်မြင်စွာ ပြီးဆုံးပါပြီ။ တကယ့် Video အစစ်ကို ဒေါင်းလုဒ်လုပ်နေပါပြီ။");
+
+      } catch (error) {
+        console.error("Render failed:", error);
+        alert("Render လုပ်ရာတွင် အမှားအယွင်းဖြစ်သွားပါသည်: " + error.message);
+      } finally {
         isRendering = false;
         btn.classList.remove('hidden');
         pBox.classList.add('hidden');
-        pStat.innerText = "Completed!";
-        alert("Render အောင်မြင်စွာ ပြီးဆုံးပါပြီ။ WebM Video File ကို ဒေါင်းလုဒ်လုပ်နေပါပြီ။");
-        requestAnimationFrame(renderLoop);
-      };
-
-      srcVideo.muted = true; 
-      srcVideo.currentTime = 0;
-      await srcVideo.play();
-      recorder.start();
-      window.speechSynthesis.speak(msg);
-
-      function recordLoop() {
-        if (!isRendering) return;
-        
-        drawPreview(); 
-        
-        const pct = (srcVideo.currentTime / currentVideoDuration) * 100;
-        pBar.style.width = pct + "%";
-        pStat.innerText = `Burning Video... ${Math.floor(pct)}%`;
-        
-        if (srcVideo.currentTime >= currentVideoDuration || srcVideo.ended) {
-          recorder.stop();
-          window.speechSynthesis.cancel();
-          return;
-        }
-        requestAnimationFrame(recordLoop);
       }
-      
-      recordLoop();
     }
   </script>
 </body>
