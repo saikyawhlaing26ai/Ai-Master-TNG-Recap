@@ -22,7 +22,6 @@
   </script>
   <style>
     .flag-shadow { filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
-    /* Hide scrollbar for clean UI */
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
@@ -30,10 +29,8 @@
 </head>
 <body class="bg-gray-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 min-h-screen transition-colors duration-200">
 
-  <!-- Sidebar Overlay -->
   <div id="drawerOverlay" onclick="toggleMenu()" class="fixed inset-0 bg-black/70 z-40 hidden backdrop-blur-sm transition-opacity"></div>
 
-  <!-- Left Sidebar Menu & Settings -->
   <aside id="sidebar" class="fixed top-0 left-0 h-full w-72 bg-white dark:bg-zinc-900 shadow-2xl z-50 transform -translate-x-full transition-transform duration-300 flex flex-col justify-between p-5 border-r border-zinc-200 dark:border-zinc-800 overflow-y-auto">
     <div class="space-y-6">
       <div class="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-3">
@@ -43,7 +40,6 @@
         </button>
       </div>
 
-      <!-- Theme Switcher -->
       <div class="space-y-2">
         <label id="lblTheme" class="text-xs uppercase font-bold text-zinc-500 tracking-wider">အလင်း / အမှောင် မုဒ်</label>
         <button onclick="toggleTheme()" class="w-full flex items-center justify-between p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100">
@@ -52,7 +48,6 @@
         </button>
       </div>
 
-      <!-- Language Selector -->
       <div class="space-y-2">
         <label id="lblLang" class="text-xs uppercase font-bold text-zinc-500 tracking-wider">UI ဘာသာစကား</label>
         <select id="langSelect" onchange="changeLanguage(this.value)" class="w-full p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 text-sm font-medium focus:ring-2 focus:ring-amber-500 outline-none">
@@ -63,7 +58,6 @@
         </select>
       </div>
 
-      <!-- History -->
       <div class="space-y-2">
         <div class="flex items-center justify-between">
           <label id="lblHistory" class="text-xs uppercase font-bold text-zinc-500 tracking-wider">လုပ်ဆောင်မှုမှတ်တမ်း</label>
@@ -74,7 +68,6 @@
         </div>
       </div>
 
-      <!-- API Keys Section -->
       <div class="space-y-3 pt-4 border-t border-zinc-200 dark:border-zinc-800">
         <label class="text-xs uppercase font-bold text-zinc-500 tracking-wider">API ချိတ်ဆက်မှုများ</label>
         <div>
@@ -94,7 +87,6 @@
     </div>
   </aside>
 
-  <!-- Top Navigation -->
   <header class="sticky top-0 z-30 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 px-4 py-3 flex items-center justify-between">
     <button onclick="toggleMenu()" class="p-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition">
       <i data-lucide="menu" class="w-5 h-5 text-zinc-800 dark:text-zinc-200"></i>
@@ -128,14 +120,10 @@
         <input type="file" id="videoInput" accept="video/*" class="hidden" onchange="loadVideo(event)">
       </label>
 
-      <!-- Live Preview Canvas -->
       <div id="previewBox" class="hidden relative w-full bg-black rounded-xl overflow-hidden shadow-lg mx-auto" style="aspect-ratio: 9/16;">
-        <!-- Hidden source video -->
         <video id="srcVideo" playsinline crossorigin="anonymous" class="hidden"></video>
-        <!-- Visible Canvas for Live Preview -->
         <canvas id="previewCanvas" class="w-full h-full object-contain"></canvas>
         
-        <!-- Custom Controls with Scrubber -->
         <div class="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-black/80 to-transparent flex flex-col gap-2 text-white z-10">
           <input type="range" id="seekSlider" min="0" max="100" value="0" class="w-full h-1 bg-gray-500 rounded-lg appearance-none cursor-pointer accent-emerald-500">
           <div class="flex justify-between items-center">
@@ -147,54 +135,71 @@
       </div>
     </section>
 
-    <!-- 2. Video Settings (Crop, Color, Captions) -->
-    <section class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 space-y-4 shadow-sm">
+    <!-- 2. Video Settings -->
+    <section class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 space-y-5 shadow-sm">
       <div class="flex items-center space-x-2 text-sm font-bold border-b border-zinc-200 dark:border-zinc-800 pb-2">
         <span class="w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs">2</span>
         <span>ရုပ်ထွက်နှင့် စာတန်းထိုး ချိန်ညှိရန်</span>
       </div>
 
-      <!-- Ratio & Flip -->
-      <div class="grid grid-cols-2 gap-2 text-xs">
-        <select id="aspectRatio" onchange="updateCanvasSize()" class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg p-2 dark:text-white outline-none">
-          <option value="9:16">Ratio: 9:16 (TikTok)</option>
-          <option value="16:9">Ratio: 16:9 (YouTube)</option>
-          <option value="1:1">Ratio: 1:1 (FB/IG)</option>
-        </select>
-        <button id="btnFlip" onclick="toggleFlip()" class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg p-2 dark:text-white flex justify-center items-center gap-1 active:scale-95 transition">
-          <i data-lucide="flip-horizontal" class="w-3.5 h-3.5 text-amber-500"></i> Flip: OFF
-        </button>
+      <!-- Canvas & Inner Crop (The new Crop Feature) -->
+      <div class="grid grid-cols-2 gap-3 text-xs pt-1">
+        <div class="space-y-1.5">
+          <label class="text-[10px] text-zinc-500 font-bold block">ပင်မဘောင် (Canvas Ratio)</label>
+          <select id="aspectRatio" onchange="updateCanvasSize()" class="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg p-2 dark:text-white outline-none">
+            <option value="9:16">9:16 (TikTok)</option>
+            <option value="16:9">16:9 (YouTube)</option>
+            <option value="1:1">1:1 (FB/IG)</option>
+          </select>
+        </div>
+        <div class="space-y-1.5">
+          <label class="text-[10px] text-zinc-500 font-bold block text-amber-600 dark:text-amber-500">ဗီဒီယိုဖြတ်ရန် (Inner Crop)</label>
+          <select id="innerCropRatio" onchange="drawPreview()" class="w-full bg-zinc-50 dark:bg-zinc-800 border border-amber-300 dark:border-amber-700 rounded-lg p-2 dark:text-white outline-none">
+            <option value="none">မူရင်းအတိုင်း (Original)</option>
+            <option value="16:9">16:9 (Landscape)</option>
+            <option value="1:1">1:1 (Square)</option>
+            <option value="4:5">4:5 (Portrait)</option>
+            <option value="3:4">3:4 (Standard)</option>
+            <option value="9:16">9:16 (Vertical)</option>
+          </select>
+        </div>
+      </div>
+      
+      <button id="btnFlip" onclick="toggleFlip()" class="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg p-2 dark:text-white flex justify-center items-center gap-1 active:scale-95 transition text-xs">
+        <i data-lucide="flip-horizontal" class="w-3.5 h-3.5 text-amber-500"></i> Flip (ဘယ်/ညာလှည့်ရန်)
+      </button>
+
+      <!-- Video Crop & Pan (Added Spacing) -->
+      <div class="space-y-3 pt-3 border-t border-zinc-200 dark:border-zinc-800">
+        <div class="text-[11px] font-bold text-amber-600 dark:text-amber-500">Video Zoom & Pan</div>
+        <div class="flex items-center gap-3 text-[11px]"><span class="w-16 text-zinc-500 font-medium">Zoom</span><input type="range" id="valZoom" min="0.5" max="3" step="0.05" value="1" oninput="drawPreview()" class="w-full accent-amber-500 bg-zinc-200 dark:bg-zinc-700 h-1.5 rounded-lg"></div>
+        <div class="flex items-center gap-3 text-[11px]"><span class="w-16 text-zinc-500 font-medium">Pan Y</span><input type="range" id="valPanY" min="-500" max="500" value="0" oninput="drawPreview()" class="w-full accent-amber-500 bg-zinc-200 dark:bg-zinc-700 h-1.5 rounded-lg"></div>
       </div>
 
-      <!-- Video Crop & Pan -->
-      <div class="space-y-2 pt-2">
-        <div class="text-[11px] font-bold text-amber-600 dark:text-amber-500">Video Crop & Zoom</div>
-        <div class="flex items-center gap-2 text-[10px]"><span class="w-10 text-zinc-500">Zoom</span><input type="range" id="valZoom" min="0.5" max="3" step="0.05" value="1" oninput="drawPreview()" class="w-full accent-amber-500 bg-zinc-200 dark:bg-zinc-700 h-1.5 rounded-lg"></div>
-        <div class="flex items-center gap-2 text-[10px]"><span class="w-10 text-zinc-500">Pan Y</span><input type="range" id="valPanY" min="-500" max="500" value="0" oninput="drawPreview()" class="w-full accent-amber-500 bg-zinc-200 dark:bg-zinc-700 h-1.5 rounded-lg"></div>
-      </div>
-
-      <!-- Color Grading -->
-      <div class="space-y-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+      <!-- Color Grading (Added Spacing) -->
+      <div class="space-y-3 pt-3 border-t border-zinc-200 dark:border-zinc-800">
         <div class="text-[11px] font-bold text-blue-500 dark:text-blue-400">Color Adjustments</div>
-        <div class="flex items-center gap-2 text-[10px]"><span class="w-14 text-zinc-500">Brightness</span><input type="range" id="valBri" min="50" max="150" value="100" oninput="drawPreview()" class="w-full accent-blue-500 bg-zinc-200 dark:bg-zinc-700 h-1.5 rounded-lg"></div>
-        <div class="flex items-center gap-2 text-[10px]"><span class="w-14 text-zinc-500">Contrast</span><input type="range" id="valCon" min="50" max="150" value="100" oninput="drawPreview()" class="w-full accent-blue-500 bg-zinc-200 dark:bg-zinc-700 h-1.5 rounded-lg"></div>
-        <div class="flex items-center gap-2 text-[10px]"><span class="w-14 text-zinc-500">Saturation</span><input type="range" id="valSat" min="0" max="200" value="100" oninput="drawPreview()" class="w-full accent-blue-500 bg-zinc-200 dark:bg-zinc-700 h-1.5 rounded-lg"></div>
+        <div class="flex items-center gap-3 text-[11px]"><span class="w-16 text-zinc-500 font-medium">Brightness</span><input type="range" id="valBri" min="50" max="150" value="100" oninput="drawPreview()" class="w-full accent-blue-500 bg-zinc-200 dark:bg-zinc-700 h-1.5 rounded-lg"></div>
+        <div class="flex items-center gap-3 text-[11px]"><span class="w-16 text-zinc-500 font-medium">Contrast</span><input type="range" id="valCon" min="50" max="150" value="100" oninput="drawPreview()" class="w-full accent-blue-500 bg-zinc-200 dark:bg-zinc-700 h-1.5 rounded-lg"></div>
+        <div class="flex items-center gap-3 text-[11px]"><span class="w-16 text-zinc-500 font-medium">Saturation</span><input type="range" id="valSat" min="0" max="200" value="100" oninput="drawPreview()" class="w-full accent-blue-500 bg-zinc-200 dark:bg-zinc-700 h-1.5 rounded-lg"></div>
       </div>
 
-      <!-- Subtitle Settings -->
-      <div class="space-y-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+      <!-- Subtitle Settings (Real Blur + Thick + Spacing) -->
+      <div class="space-y-3 pt-3 border-t border-zinc-200 dark:border-zinc-800">
         <div class="flex justify-between items-center text-[11px] font-bold text-rose-500 dark:text-rose-400">
-          <span>စာတန်းထိုး & Blur</span>
+          <span>စာတန်းထိုး & Blur အစစ်</span>
           <div class="flex items-center gap-2">
             <span>အရောင်- </span>
             <input type="color" id="valTextColor" value="#FFDE00" oninput="drawPreview()" class="w-6 h-6 rounded bg-transparent border-0 cursor-pointer">
           </div>
         </div>
-        <div class="flex items-center gap-2 text-[10px]"><span class="w-14 text-zinc-500">Blur Pos</span><input type="range" id="valBlurPos" min="0" max="100" value="85" oninput="drawPreview()" class="w-full accent-rose-500 bg-zinc-200 dark:bg-zinc-700 h-1.5 rounded-lg"></div>
+        <div class="flex items-center gap-3 text-[11px]"><span class="w-20 text-zinc-500 font-medium">Blur Pos</span><input type="range" id="valBlurPos" min="0" max="100" value="85" oninput="drawPreview()" class="w-full accent-rose-500 bg-zinc-200 dark:bg-zinc-700 h-1.5 rounded-lg"></div>
+        
         <!-- Blur Thick အသစ် ထည့်သွင်းထားသော နေရာ -->
-        <div class="flex items-center gap-2 text-[10px]"><span class="w-14 text-zinc-500">Blur Thick</span><input type="range" id="valBlurHeight" min="20" max="300" value="120" step="10" oninput="drawPreview()" class="w-full accent-rose-500 bg-zinc-200 dark:bg-zinc-700 h-1.5 rounded-lg"></div>
-        <div class="flex items-center gap-2 text-[10px]"><span class="w-14 text-zinc-500">Text Pos</span><input type="range" id="valTextPos" min="0" max="100" value="90" oninput="drawPreview()" class="w-full accent-rose-500 bg-zinc-200 dark:bg-zinc-700 h-1.5 rounded-lg"></div>
-        <div class="flex items-center gap-2 text-[10px]"><span class="w-14 text-zinc-500">Text Size</span><input type="range" id="valTextSize" min="20" max="80" value="40" oninput="drawPreview()" class="w-full accent-rose-500 bg-zinc-200 dark:bg-zinc-700 h-1.5 rounded-lg"></div>
+        <div class="flex items-center gap-3 text-[11px]"><span class="w-20 text-zinc-500 font-medium">Blur Thick</span><input type="range" id="valBlurHeight" min="20" max="300" value="100" step="5" oninput="drawPreview()" class="w-full accent-rose-500 bg-zinc-200 dark:bg-zinc-700 h-1.5 rounded-lg"></div>
+        
+        <div class="flex items-center gap-3 text-[11px]"><span class="w-20 text-zinc-500 font-medium">Text Pos</span><input type="range" id="valTextPos" min="0" max="100" value="90" oninput="drawPreview()" class="w-full accent-rose-500 bg-zinc-200 dark:bg-zinc-700 h-1.5 rounded-lg"></div>
+        <div class="flex items-center gap-3 text-[11px]"><span class="w-20 text-zinc-500 font-medium">Text Size</span><input type="range" id="valTextSize" min="20" max="80" value="40" oninput="drawPreview()" class="w-full accent-rose-500 bg-zinc-200 dark:bg-zinc-700 h-1.5 rounded-lg"></div>
       </div>
     </section>
 
@@ -205,7 +210,6 @@
           <span class="w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-xs">3</span>
           <span>မြန်မာ AI Dubbing (TTS)</span>
         </div>
-        <!-- Test Voice Preview Button -->
         <button onclick="testVoicePreview()" class="text-[10px] font-bold text-indigo-500 hover:underline flex items-center gap-1 active:scale-95">
           <i data-lucide="volume-2" class="w-3.5 h-3.5"></i> အသံစမ်းရန်
         </button>
@@ -228,9 +232,9 @@
         </label>
       </div>
 
-      <div class="space-y-2 pt-1">
-        <div class="flex items-center gap-2 text-[10px]"><span class="w-10 text-zinc-500">Pitch</span><input type="range" id="valPitch" min="0.5" max="1.5" step="0.1" value="1.0" class="w-full accent-indigo-500 bg-zinc-200 dark:bg-zinc-700 h-1.5 rounded-lg"></div>
-        <div class="flex items-center gap-2 text-[10px]"><span class="w-10 text-zinc-500">Speed</span><input type="range" id="valSpeed" min="0.5" max="1.5" step="0.1" value="1.0" class="w-full accent-indigo-500 bg-zinc-200 dark:bg-zinc-700 h-1.5 rounded-lg"></div>
+      <div class="space-y-3 pt-3">
+        <div class="flex items-center gap-3 text-[11px]"><span class="w-12 text-zinc-500 font-medium">Pitch</span><input type="range" id="valPitch" min="0.5" max="1.5" step="0.1" value="1.0" class="w-full accent-indigo-500 bg-zinc-200 dark:bg-zinc-700 h-1.5 rounded-lg"></div>
+        <div class="flex items-center gap-3 text-[11px]"><span class="w-12 text-zinc-500 font-medium">Speed</span><input type="range" id="valSpeed" min="0.5" max="1.5" step="0.1" value="1.0" class="w-full accent-indigo-500 bg-zinc-200 dark:bg-zinc-700 h-1.5 rounded-lg"></div>
       </div>
     </section>
 
@@ -281,7 +285,6 @@
     let isRendering = false;
     let currentVideoDuration = 0;
 
-    // Load & Save Keys
     function saveKeys() {
       localStorage.setItem('geminiKey', document.getElementById('geminiKey').value);
       localStorage.setItem('sttKey', document.getElementById('sttKey').value);
@@ -295,7 +298,6 @@
       document.getElementById('ttsKey').value = localStorage.getItem('ttsKey') || '';
     };
 
-    // UI Menu & Theme
     function toggleMenu() {
       const sb = document.getElementById('sidebar');
       const ov = document.getElementById('drawerOverlay');
@@ -318,7 +320,6 @@
       else if(lang === 'en') title.innerText = "Settings Menu";
     }
 
-    // Video Load & Custom Controls
     function loadVideo(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -344,12 +345,11 @@
       };
     }
 
-    // Seek Slider Event
     seekSlider.addEventListener('input', () => {
       if(!isRendering) {
         srcVideo.currentTime = seekSlider.value;
         updateTimeText();
-        drawPreview(); // force draw when seeking manually
+        drawPreview();
       }
     });
 
@@ -378,7 +378,7 @@
 
     function toggleFlip() {
       isFlipped = !isFlipped;
-      document.getElementById('btnFlip').innerHTML = `<i data-lucide="flip-horizontal" class="w-3.5 h-3.5 text-amber-500"></i> Flip: ${isFlipped?'ON':'OFF'}`;
+      document.getElementById('btnFlip').innerHTML = `<i data-lucide="flip-horizontal" class="w-3.5 h-3.5 text-amber-500"></i> Flip (ဘယ်/ညာလှည့်ရန်): ${isFlipped?'ON':'OFF'}`;
       lucide.createIcons();
       drawPreview();
     }
@@ -389,7 +389,6 @@
       return `${m}:${sec<10?'0':''}${sec}`;
     }
 
-    // High-Res Canvas Size Setup
     function updateCanvasSize() {
       const ratio = document.getElementById('aspectRatio').value;
       let w, h;
@@ -403,7 +402,7 @@
     }
 
     // ==========================================
-    // UPDATE: Draw Frame Engine (Fit & Blur)
+    // THE NEW ENGINE: Inner Crop + Real Blur + Color
     // ==========================================
     function drawPreview() {
       if(srcVideo.readyState < 2) return;
@@ -413,53 +412,76 @@
       const vw = srcVideo.videoWidth;
       const vh = srcVideo.videoHeight;
 
+      const innerCrop = document.getElementById('innerCropRatio').value;
       const zoom = parseFloat(document.getElementById('valZoom').value);
       const panY = parseInt(document.getElementById('valPanY').value);
       const bri = document.getElementById('valBri').value;
       const con = document.getElementById('valCon').value;
       const sat = document.getElementById('valSat').value;
+      
       const blurPos = document.getElementById('valBlurPos').value; 
-      const blurHeight = document.getElementById('valBlurHeight').value; 
+      const blurHeight = document.getElementById('valBlurHeight').value;
+      
       const textPos = document.getElementById('valTextPos').value; 
       const textSize = document.getElementById('valTextSize').value; 
       const txtColor = document.getElementById('valTextColor').value;
       const sampleText = document.getElementById('recapText').value || "မြန်မာစာတန်းထိုး (Preview)";
 
-      ctx.save();
-      
-      // ၁။ Video ကို Fit ဖြစ်အောင် တွက်ချက်ခြင်း (Math.min သုံးထားသည်)
-      let scale = Math.min(w/vw, h/vh) * zoom;
-      let dw = vw * scale;
-      let dh = vh * scale;
-      let dx = (w - dw)/2;
-      let dy = (h - dh)/2 + panY;
+      // --- ၁။ Inner Crop Ratio တွက်ချက်ခြင်း ---
+      let targetRatio = vw / vh; // မူရင်းအတိုင်း
+      if (innerCrop === '16:9') targetRatio = 16/9;
+      else if (innerCrop === '1:1') targetRatio = 1;
+      else if (innerCrop === '4:5') targetRatio = 4/5;
+      else if (innerCrop === '3:4') targetRatio = 3/4;
+      else if (innerCrop === '9:16') targetRatio = 9/16;
 
+      let sW = vw; let sH = vh;
+      if (vw / vh > targetRatio) { sW = vh * targetRatio; } 
+      else { sH = vw / targetRatio; }
+      let sX = (vw - sW) / 2; let sY = (vh - sH) / 2;
+
+      let scale = Math.min(w/sW, h/sH) * zoom;
+      let dw = sW * scale; let dh = sH * scale;
+      let dx = (w - dw)/2; let dy = (h - dh)/2 + panY;
+
+      ctx.fillStyle = "#000";
+      ctx.fillRect(0, 0, w, h);
+
+      // --- ၂။ လွတ်နေသောနေရာများကို Background Blur ဖြင့် ဖုံးခြင်း ---
+      ctx.filter = `brightness(40%) blur(15px)`;
+      let bgScale = Math.max(w/vw, h/vh);
+      let bgDw = vw * bgScale; let bgDh = vh * bgScale;
+      ctx.drawImage(srcVideo, (w - bgDw)/2, (h - bgDh)/2, bgDw, bgDh);
+
+      // --- ၃။ Inner Crop လုပ်ထားသော Video ကို အလယ်တွင် ထည့်ခြင်း ---
+      ctx.save();
+      ctx.filter = `brightness(${bri}%) contrast(${con}%) saturate(${sat}%)`;
       if (isFlipped) {
         ctx.translate(w, 0);
         ctx.scale(-1, 1);
       }
-
-      // ၂။ အပေါ်/အောက် လွတ်နေသော နေရာများအတွက် Video အား ကြီး၍ Blur ပြုလုပ်ခြင်း
-      ctx.filter = `brightness(40%) blur(15px)`;
-      let bgScale = Math.max(w/vw, h/vh);
-      let bgDw = vw * bgScale;
-      let bgDh = vh * bgScale;
-      let bgDx = (w - bgDw)/2;
-      let bgDy = (h - bgDh)/2;
-      ctx.drawImage(srcVideo, bgDx, bgDy, bgDw, bgDh);
-
-      // ၃။ အလယ်မှ Video အစစ်ကို ထပ်တင်ခြင်း
-      ctx.filter = `brightness(${bri}%) contrast(${con}%) saturate(${sat}%)`;
-      ctx.drawImage(srcVideo, dx, dy, dw, dh);
+      ctx.drawImage(srcVideo, sX, sY, sW, sH, dx, dy, dw, dh);
       ctx.restore();
 
-      // ၄။ Blur Band အစစ် (အမည်းရောင်မသုံးတော့ပါ) - Preview တွင် Semi-transparent ဖြင့် ပြမည်
+      // --- ၄။ တကယ့် Blur အစစ် (Real BoxBlur) ဖြင့် စာတန်းဖျောက်ခြင်း ---
       const bY = (blurPos / 100) * h;
       const bH = parseInt(blurHeight);
-      ctx.fillStyle = "rgba(100, 100, 100, 0.6)"; 
-      ctx.fillRect(0, bY - (bH/2), w, bH);
+      const bTop = bY - (bH/2);
 
-      // ၅။ စာတန်းထိုး
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, bTop, w, bH);
+      ctx.clip(); // Blur လုပ်မည့် ဧရိယာကို ကန့်သတ်ခြင်း
+
+      ctx.filter = `blur(12px) brightness(85%)`; // တကယ့် မှန်ဝါးအစစ်
+      if (isFlipped) {
+        ctx.translate(w, 0);
+        ctx.scale(-1, 1);
+      }
+      ctx.drawImage(srcVideo, sX, sY, sW, sH, dx, dy, dw, dh);
+      ctx.restore();
+
+      // --- ၅။ စာတန်းထိုး ---
       const tY = (textPos / 100) * h;
       ctx.font = `bold ${textSize}px sans-serif`;
       ctx.textAlign = "center";
@@ -478,7 +500,6 @@
       reqAnimFrame = requestAnimationFrame(renderLoop);
     }
 
-    // Voice Test Preview
     function testVoicePreview() {
       const selectedVoice = document.querySelector('input[name="ttsVoice"]:checked').value;
       const textVal = document.getElementById('recapText').value;
@@ -499,24 +520,23 @@
       }
     }
 
-    // AI Recap Generation
     async function generateScript() {
       const text = document.getElementById('recapText');
       text.value = "Audio STT Extracting... \nGemini API Translating... \n\n'မင်္ဂလာပါ၊ ဒီဗီဒီယိုလေးမှာတော့ မမျှော်လင့်ထားတဲ့ အဖြစ်အပျက်လေးတစ်ခုကို တွေ့ရမှာပါ။ ဘာဆက်ဖြစ်မလဲ ဆက်ကြည့်ရအောင်...'";
     }
 
-    // ==========================================
-    // REAL RENDER ENGINE (Connected to Server)
-    // ==========================================
     async function startRealRender() {
       const fileInput = document.getElementById('videoInput');
       const file = fileInput.files[0];
       if (!file) { alert("ဗီဒီယိုအရင်ရွေးပါ"); return; }
       
       const geminiKey = document.getElementById('geminiKey').value || "no_key";
-      const ratio = document.getElementById('aspectRatio').value; // Aspect Ratio ဖမ်းယူခြင်း
+      
+      const ratio = document.getElementById('aspectRatio').value;
+      const innerCrop = document.getElementById('innerCropRatio').value; // Inner Crop အသစ်
       const blurPos = document.getElementById('valBlurPos').value;
-      const blurHeight = document.getElementById('valBlurHeight').value; // Blur Thick ဖမ်းယူခြင်း
+      const blurHeight = document.getElementById('valBlurHeight').value; // Blur အထူ/အပါး
+      
       const ttsVoice = document.querySelector('input[name="ttsVoice"]:checked').value;
 
       isRendering = true;
@@ -535,8 +555,9 @@
       formData.append("gemini_key", geminiKey);
       formData.append("tts_voice", ttsVoice);
       formData.append("ratio", ratio);
+      formData.append("inner_crop", innerCrop);
       formData.append("blur_pos", blurPos);
-      formData.append("blur_height", blurHeight); // ဆာဗာသို့ အထူအပါး ပို့ပေးခြင်း
+      formData.append("blur_height", blurHeight);
 
       try {
         const response = await fetch("https://ai-master-backend-2zwp.onrender.com/render", {
@@ -553,7 +574,7 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `AiMaster_Rendered_${Date.now()}.mp4`; // mp4 ဖြင့် ပြောင်းထားသည်
+        a.download = `AiMaster_Rendered_${Date.now()}.mp4`;
         a.click();
         
         alert("Render အောင်မြင်စွာ ပြီးဆုံးပါပြီ။ တကယ့် Video အစစ်ကို ဒေါင်းလုဒ်လုပ်နေပါပြီ။");
