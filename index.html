@@ -525,26 +525,22 @@
       text.value = "Audio STT Extracting... \nGemini API Translating... \n\n'မင်္ဂလာပါ၊ ဒီဗီဒီယိုလေးမှာတော့ မမျှော်လင့်ထားတဲ့ အဖြစ်အပျက်လေးတစ်ခုကို တွေ့ရမှာပါ။ ဘာဆက်ဖြစ်မလဲ ဆက်ကြည့်ရအောင်...'";
     }
 
-        async function startRealRender() {
+            async function startRealRender() {
       const fileInput = document.getElementById('videoInput');
       const file = fileInput.files[0];
       if (!file) { alert("ဗီဒီယိုအရင်ရွေးပါ"); return; }
       
       const geminiKey = document.getElementById('geminiKey').value || "no_key";
-      
       const ratio = document.getElementById('aspectRatio').value;
       const innerCrop = document.getElementById('innerCropRatio').value; 
       const blurPos = document.getElementById('valBlurPos').value;
       const blurHeight = document.getElementById('valBlurHeight').value; 
-      
-      // --- အသစ်ထပ်ထည့်ထားသော Data များ ---
       const zoom = document.getElementById('valZoom').value;
       const panY = document.getElementById('valPanY').value;
       const bri = document.getElementById('valBri').value;
       const con = document.getElementById('valCon').value;
       const sat = document.getElementById('valSat').value;
-      const flip = isFlipped.toString(); // Flip အခြေအနေ
-      
+      const flip = isFlipped.toString(); 
       const ttsVoice = document.querySelector('input[name="ttsVoice"]:checked').value;
 
       isRendering = true;
@@ -566,8 +562,6 @@
       formData.append("inner_crop", innerCrop);
       formData.append("blur_pos", blurPos);
       formData.append("blur_height", blurHeight);
-      
-      // --- ဆာဗာသို့ အသစ်ပို့မည့် Data များ ---
       formData.append("zoom", zoom);
       formData.append("pan_y", panY);
       formData.append("bri", bri);
@@ -581,7 +575,18 @@
           body: formData
         });
 
-        if (!response.ok) throw new Error("Server error: " + response.statusText);
+        // Error တက်ပါက Json ဖိုင်အဖြစ် ဒေါင်းလုဒ်မလုပ်တော့ဘဲ Alert အဖြစ် ပြပေးမည်
+        if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(errData.error || "Server Error ဖြစ်နေပါသည်။");
+        }
+        
+        // Response သည် ဗီဒီယိုဟုတ်မဟုတ် စစ်ဆေးခြင်း
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+             const errData = await response.json();
+             throw new Error(errData.error || "Server မှ ဗီဒီယိုအစား စာသား ပြန်ပို့လိုက်ပါသည်။");
+        }
 
         pStat.innerText = "Video ရရှိပါပြီ! ဒေါင်းလုဒ်လုပ်နေပါသည်...";
         pBar.style.width = "100%";
@@ -593,11 +598,11 @@
         a.download = `AiMaster_Rendered_${Date.now()}.mp4`;
         a.click();
         
-        alert("Render အောင်မြင်စွာ ပြီးဆုံးပါပြီ။ တကယ့် Video အစစ်ကို ဒေါင်းလုဒ်လုပ်နေပါပြီ။");
+        alert("Render အောင်မြင်စွာ ပြီးဆုံးပါပြီ။");
 
       } catch (error) {
         console.error("Render failed:", error);
-        alert("Render လုပ်ရာတွင် အမှားအယွင်းဖြစ်သွားပါသည်: " + error.message);
+        alert("Render လုပ်ရာတွင် အမှားအယွင်းဖြစ်သွားပါသည်:\n" + error.message);
       } finally {
         isRendering = false;
         btn.classList.remove('hidden');
