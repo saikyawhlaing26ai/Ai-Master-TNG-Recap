@@ -22,6 +22,7 @@
   </script>
   <style>
     .flag-shadow { filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+    /* Hide scrollbar for clean UI */
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
@@ -60,6 +61,17 @@
           <option value="th">ไทย (Thai)</option>
           <option value="en">English</option>
         </select>
+      </div>
+
+      <!-- History -->
+      <div class="space-y-2">
+        <div class="flex items-center justify-between">
+          <label id="lblHistory" class="text-xs uppercase font-bold text-zinc-500 tracking-wider">လုပ်ဆောင်မှုမှတ်တမ်း</label>
+          <span class="text-xs text-zinc-400">0 Items</span>
+        </div>
+        <div class="p-3 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-800 text-center text-xs text-zinc-400">
+          မှတ်တမ်း အသစ်မရှိသေးပါ
+        </div>
       </div>
 
       <!-- API Keys Section -->
@@ -118,9 +130,12 @@
 
       <!-- Live Preview Canvas -->
       <div id="previewBox" class="hidden relative w-full bg-black rounded-xl overflow-hidden shadow-lg mx-auto" style="aspect-ratio: 9/16;">
+        <!-- Hidden source video -->
         <video id="srcVideo" playsinline crossorigin="anonymous" class="hidden"></video>
+        <!-- Visible Canvas for Live Preview -->
         <canvas id="previewCanvas" class="w-full h-full object-contain"></canvas>
         
+        <!-- Custom Controls with Scrubber -->
         <div class="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-black/80 to-transparent flex flex-col gap-2 text-white z-10">
           <input type="range" id="seekSlider" min="0" max="100" value="0" class="w-full h-1 bg-gray-500 rounded-lg appearance-none cursor-pointer accent-emerald-500">
           <div class="flex justify-between items-center">
@@ -139,52 +154,47 @@
         <span>ရုပ်ထွက်နှင့် စာတန်းထိုး ချိန်ညှိရန်</span>
       </div>
 
-      <!-- Ratio -->
-      <div class="space-y-2 pt-2">
-        <div class="text-[11px] font-bold text-amber-600 dark:text-amber-500">Video Final Ratio (Canvas)</div>
-        <select id="aspectRatio" onchange="updateCanvasSize()" class="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg p-2 text-xs dark:text-white outline-none">
-          <option value="9:16">9:16 (TikTok) - အပေါ်အောက် Blur ခံမည်</option>
-          <option value="16:9">16:9 (YouTube)</option>
-          <option value="1:1">1:1 (FB/IG)</option>
-          <option value="3:4">3:4 (Portrait)</option>
-          <option value="4:5">4:5 (FB Portrait)</option>
+      <!-- Ratio & Flip -->
+      <div class="grid grid-cols-2 gap-2 text-xs">
+        <select id="aspectRatio" onchange="updateCanvasSize()" class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg p-2 dark:text-white outline-none">
+          <option value="9:16">Ratio: 9:16 (TikTok)</option>
+          <option value="16:9">Ratio: 16:9 (YouTube)</option>
+          <option value="1:1">Ratio: 1:1 (FB/IG)</option>
         </select>
-        <p class="text-[10px] text-zinc-500 italic mt-1">
-          * ရွေးချယ်ထားသော Ratio ဘောင်အတွင်း ဗီဒီယိုကို Fit ထည့်ပေးပြီး လွတ်နေသောနေရာများကို Background Blur ပြုလုပ်ပေးပါမည်။
-        </p>
+        <button id="btnFlip" onclick="toggleFlip()" class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg p-2 dark:text-white flex justify-center items-center gap-1 active:scale-95 transition">
+          <i data-lucide="flip-horizontal" class="w-3.5 h-3.5 text-amber-500"></i> Flip: OFF
+        </button>
       </div>
 
-      <!-- Video Crop & Pan (Spacing Added) -->
-      <div class="space-y-3 pt-3 border-t border-zinc-200 dark:border-zinc-800 mt-2">
-        <div class="flex justify-between items-center text-[11px] font-bold text-amber-600 dark:text-amber-500">
-          <span>Video Crop & Zoom</span>
-          <button id="btnFlip" onclick="toggleFlip()" class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded px-2 py-1 text-[10px] flex items-center gap-1 active:scale-95 transition">
-            <i data-lucide="flip-horizontal" class="w-3 h-3 text-amber-500"></i> Flip
-          </button>
-        </div>
+      <!-- Video Crop & Pan -->
+      <div class="space-y-2 pt-2">
+        <div class="text-[11px] font-bold text-amber-600 dark:text-amber-500">Video Crop & Zoom</div>
         <div class="flex items-center gap-2 text-[10px]"><span class="w-10 text-zinc-500">Zoom</span><input type="range" id="valZoom" min="0.5" max="3" step="0.05" value="1" oninput="drawPreview()" class="w-full accent-amber-500 bg-zinc-200 dark:bg-zinc-700 h-1.5 rounded-lg"></div>
         <div class="flex items-center gap-2 text-[10px]"><span class="w-10 text-zinc-500">Pan Y</span><input type="range" id="valPanY" min="-500" max="500" value="0" oninput="drawPreview()" class="w-full accent-amber-500 bg-zinc-200 dark:bg-zinc-700 h-1.5 rounded-lg"></div>
       </div>
 
-      <!-- Color Grading (Spacing Added) -->
-      <div class="space-y-3 pt-3 border-t border-zinc-200 dark:border-zinc-800 mt-2">
+      <!-- Color Grading -->
+      <div class="space-y-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
         <div class="text-[11px] font-bold text-blue-500 dark:text-blue-400">Color Adjustments</div>
         <div class="flex items-center gap-2 text-[10px]"><span class="w-14 text-zinc-500">Brightness</span><input type="range" id="valBri" min="50" max="150" value="100" oninput="drawPreview()" class="w-full accent-blue-500 bg-zinc-200 dark:bg-zinc-700 h-1.5 rounded-lg"></div>
         <div class="flex items-center gap-2 text-[10px]"><span class="w-14 text-zinc-500">Contrast</span><input type="range" id="valCon" min="50" max="150" value="100" oninput="drawPreview()" class="w-full accent-blue-500 bg-zinc-200 dark:bg-zinc-700 h-1.5 rounded-lg"></div>
+        <div class="flex items-center gap-2 text-[10px]"><span class="w-14 text-zinc-500">Saturation</span><input type="range" id="valSat" min="0" max="200" value="100" oninput="drawPreview()" class="w-full accent-blue-500 bg-zinc-200 dark:bg-zinc-700 h-1.5 rounded-lg"></div>
       </div>
 
-      <!-- Subtitle & Blur Settings (Blur Height Added) -->
-      <div class="space-y-3 pt-3 border-t border-zinc-200 dark:border-zinc-800 mt-2">
+      <!-- Subtitle Settings -->
+      <div class="space-y-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
         <div class="flex justify-between items-center text-[11px] font-bold text-rose-500 dark:text-rose-400">
-          <span>စာတန်းထိုး & Real Blur</span>
+          <span>စာတန်းထိုး & Blur</span>
           <div class="flex items-center gap-2">
-            <span>အရောင်: </span>
+            <span>အရောင်- </span>
             <input type="color" id="valTextColor" value="#FFDE00" oninput="drawPreview()" class="w-6 h-6 rounded bg-transparent border-0 cursor-pointer">
           </div>
         </div>
         <div class="flex items-center gap-2 text-[10px]"><span class="w-14 text-zinc-500">Blur Pos</span><input type="range" id="valBlurPos" min="0" max="100" value="85" oninput="drawPreview()" class="w-full accent-rose-500 bg-zinc-200 dark:bg-zinc-700 h-1.5 rounded-lg"></div>
-        <div class="flex items-center gap-2 text-[10px]"><span class="w-14 text-zinc-500">Blur အထူ</span><input type="range" id="valBlurHeight" min="20" max="300" value="100" step="10" oninput="drawPreview()" class="w-full accent-rose-500 bg-zinc-200 dark:bg-zinc-700 h-1.5 rounded-lg"></div>
+        <!-- Blur Thick အသစ် ထည့်သွင်းထားသော နေရာ -->
+        <div class="flex items-center gap-2 text-[10px]"><span class="w-14 text-zinc-500">Blur Thick</span><input type="range" id="valBlurHeight" min="20" max="300" value="120" step="10" oninput="drawPreview()" class="w-full accent-rose-500 bg-zinc-200 dark:bg-zinc-700 h-1.5 rounded-lg"></div>
         <div class="flex items-center gap-2 text-[10px]"><span class="w-14 text-zinc-500">Text Pos</span><input type="range" id="valTextPos" min="0" max="100" value="90" oninput="drawPreview()" class="w-full accent-rose-500 bg-zinc-200 dark:bg-zinc-700 h-1.5 rounded-lg"></div>
+        <div class="flex items-center gap-2 text-[10px]"><span class="w-14 text-zinc-500">Text Size</span><input type="range" id="valTextSize" min="20" max="80" value="40" oninput="drawPreview()" class="w-full accent-rose-500 bg-zinc-200 dark:bg-zinc-700 h-1.5 rounded-lg"></div>
       </div>
     </section>
 
@@ -195,29 +205,55 @@
           <span class="w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-xs">3</span>
           <span>မြန်မာ AI Dubbing (TTS)</span>
         </div>
+        <!-- Test Voice Preview Button -->
+        <button onclick="testVoicePreview()" class="text-[10px] font-bold text-indigo-500 hover:underline flex items-center gap-1 active:scale-95">
+          <i data-lucide="volume-2" class="w-3.5 h-3.5"></i> အသံစမ်းရန်
+        </button>
       </div>
 
       <div class="grid grid-cols-2 gap-2 text-xs">
         <label class="flex items-center p-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 cursor-pointer hover:border-indigo-500 transition">
           <input type="radio" name="ttsVoice" value="male" checked class="text-indigo-600">
           <div class="ml-2 leading-tight">
-            <span class="font-bold">သီဟ (ကျား)</span>
+            <span class="font-bold">သီဟ (ကျား)</span><br>
+            <span class="text-[9px] text-zinc-500">Recap Narrator</span>
           </div>
         </label>
         <label class="flex items-center p-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 cursor-pointer hover:border-indigo-500 transition">
           <input type="radio" name="ttsVoice" value="female" class="text-indigo-600">
           <div class="ml-2 leading-tight">
-            <span class="font-bold">နီလာ (မ)</span>
+            <span class="font-bold">နီလာ (မ)</span><br>
+            <span class="text-[9px] text-zinc-500">Storyteller</span>
           </div>
         </label>
       </div>
+
+      <div class="space-y-2 pt-1">
+        <div class="flex items-center gap-2 text-[10px]"><span class="w-10 text-zinc-500">Pitch</span><input type="range" id="valPitch" min="0.5" max="1.5" step="0.1" value="1.0" class="w-full accent-indigo-500 bg-zinc-200 dark:bg-zinc-700 h-1.5 rounded-lg"></div>
+        <div class="flex items-center gap-2 text-[10px]"><span class="w-10 text-zinc-500">Speed</span><input type="range" id="valSpeed" min="0.5" max="1.5" step="0.1" value="1.0" class="w-full accent-indigo-500 bg-zinc-200 dark:bg-zinc-700 h-1.5 rounded-lg"></div>
+      </div>
+    </section>
+
+    <!-- 4. Text Recap Generation -->
+    <section class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 space-y-3 shadow-sm">
+      <div class="flex justify-between items-center text-sm font-bold">
+        <div class="flex items-center space-x-2">
+          <span class="w-6 h-6 rounded-full bg-rose-500 text-white flex items-center justify-center text-xs">4</span>
+          <span>Recap စာသား</span>
+        </div>
+        <button onclick="generateScript()" class="bg-gradient-to-r from-rose-600 to-amber-600 text-white px-3 py-1.5 rounded-lg text-xs flex items-center gap-1 active:scale-95 shadow">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Auto STT+Translate
+        </button>
+      </div>
+      <textarea id="recapText" rows="3" class="w-full text-[11px] p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 outline-none focus:border-rose-500" placeholder="Script ဒီနေရာတွင် ပေါ်လာပါမည်..."></textarea>
     </section>
 
     <!-- 5. REAL RENDER BUTTON & PROGRESS -->
-    <div class="fixed bottom-0 left-0 w-full bg-white dark:bg-zinc-950 p-4 border-t border-zinc-200 dark:border-zinc-800 z-20 shadow-[0_-10px_30px_rgba(0,0,0,0.1)]">
+    <div class="fixed bottom-0 left-0 w-full bg-white dark:bg-zinc-950 p-4 border-t border-zinc-200 dark:border-zinc-800 z-20 shadow-[0_-10px_30px_rgba(0,0,0,0.1)] dark:shadow-[0_-10px_30px_rgba(0,0,0,0.8)]">
       <div id="renderProgress" class="hidden mb-3 space-y-1.5">
         <div class="flex justify-between text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
-          <span id="renderStatus">Rendering Video (0%) ...</span>
+          <span id="renderStatus">Server ပေါ်သို့ တင်၍ Render ပြုလုပ်နေပါသည်...</span>
+          <span id="renderTimer"></span>
         </div>
         <div class="w-full h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
           <div id="renderBar" class="h-full bg-gradient-to-r from-amber-500 to-emerald-500 w-0 transition-all duration-300"></div>
@@ -226,7 +262,7 @@
       
       <button id="btnRenderStart" onclick="startRealRender()" class="w-full py-3.5 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 font-extrabold text-sm flex justify-center items-center gap-2 active:scale-95 transition shadow-lg">
         <i data-lucide="disc" class="w-5 h-5"></i>
-        <span>BURN & RENDER VIDEO</span>
+        <span>BURN & RENDER VIDEO (.mp4)</span>
       </button>
     </div>
 
@@ -245,12 +281,21 @@
     let isRendering = false;
     let currentVideoDuration = 0;
 
+    // Load & Save Keys
     function saveKeys() {
       localStorage.setItem('geminiKey', document.getElementById('geminiKey').value);
       localStorage.setItem('sttKey', document.getElementById('sttKey').value);
       localStorage.setItem('ttsKey', document.getElementById('ttsKey').value);
+      document.getElementById('keyStatus').innerText = "✓ Keys အောင်မြင်စွာ သိမ်းဆည်းပြီးပါပြီ";
+      setTimeout(() => document.getElementById('keyStatus').innerText="", 3000);
     }
+    window.onload = () => {
+      document.getElementById('geminiKey').value = localStorage.getItem('geminiKey') || '';
+      document.getElementById('sttKey').value = localStorage.getItem('sttKey') || '';
+      document.getElementById('ttsKey').value = localStorage.getItem('ttsKey') || '';
+    };
 
+    // UI Menu & Theme
     function toggleMenu() {
       const sb = document.getElementById('sidebar');
       const ov = document.getElementById('drawerOverlay');
@@ -260,13 +305,20 @@
         sb.classList.add('-translate-x-full'); ov.classList.add('hidden');
       }
     }
-
     function toggleTheme() {
       const html = document.documentElement;
       const isDark = html.classList.toggle('dark');
+      document.getElementById('themeStateText').innerText = isDark ? "Light Mode ပြောင်းမည်" : "Dark Mode ပြောင်းမည်";
+      document.getElementById('themeIcon').setAttribute('data-lucide', isDark ? 'sun' : 'moon');
       lucide.createIcons();
     }
+    function changeLanguage(lang) {
+      const title = document.getElementById('menuTitle');
+      if(lang === 'mm') title.innerText = "သတ်မှတ်ချက်များ (Menu)";
+      else if(lang === 'en') title.innerText = "Settings Menu";
+    }
 
+    // Video Load & Custom Controls
     function loadVideo(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -279,45 +331,70 @@
         seekSlider.max = Math.floor(srcVideo.duration);
         updateCanvasSize();
         srcVideo.play();
+        document.getElementById('playIcon').setAttribute('data-lucide', 'pause');
+        lucide.createIcons();
         requestAnimationFrame(renderLoop);
       };
       
       srcVideo.ontimeupdate = () => {
         if(!isRendering) {
           seekSlider.value = Math.floor(srcVideo.currentTime);
+          updateTimeText();
         }
       };
     }
 
+    // Seek Slider Event
     seekSlider.addEventListener('input', () => {
       if(!isRendering) {
         srcVideo.currentTime = seekSlider.value;
-        drawPreview(); 
+        updateTimeText();
+        drawPreview(); // force draw when seeking manually
       }
     });
 
+    function updateTimeText() {
+      document.getElementById('timeText').innerText = `${formatTime(srcVideo.currentTime)} / ${formatTime(currentVideoDuration)}`;
+    }
+
     function togglePlay() {
       if(isRendering) return;
-      if (srcVideo.paused) srcVideo.play(); else srcVideo.pause();
+      const icon = document.getElementById('playIcon');
+      if (srcVideo.paused) { 
+        srcVideo.play(); icon.setAttribute('data-lucide', 'pause'); 
+      } else { 
+        srcVideo.pause(); icon.setAttribute('data-lucide', 'play'); 
+      }
+      lucide.createIcons();
     }
     
     function toggleMute() {
       if(isRendering) return;
+      const icon = document.getElementById('muteIcon');
       srcVideo.muted = !srcVideo.muted;
+      icon.setAttribute('data-lucide', srcVideo.muted ? 'volume-x' : 'volume-2');
+      lucide.createIcons();
     }
 
     function toggleFlip() {
       isFlipped = !isFlipped;
+      document.getElementById('btnFlip').innerHTML = `<i data-lucide="flip-horizontal" class="w-3.5 h-3.5 text-amber-500"></i> Flip: ${isFlipped?'ON':'OFF'}`;
+      lucide.createIcons();
       drawPreview();
     }
 
+    function formatTime(s) {
+      if(isNaN(s)) return "0:00";
+      let m = Math.floor(s/60); let sec = Math.floor(s%60);
+      return `${m}:${sec<10?'0':''}${sec}`;
+    }
+
+    // High-Res Canvas Size Setup
     function updateCanvasSize() {
       const ratio = document.getElementById('aspectRatio').value;
       let w, h;
       if (ratio === '9:16') { w = 720; h = 1280; document.getElementById('previewBox').style.aspectRatio = "9/16"; }
       else if (ratio === '16:9') { w = 1280; h = 720; document.getElementById('previewBox').style.aspectRatio = "16/9"; }
-      else if (ratio === '3:4') { w = 720; h = 960; document.getElementById('previewBox').style.aspectRatio = "3/4"; }
-      else if (ratio === '4:5') { w = 720; h = 900; document.getElementById('previewBox').style.aspectRatio = "4/5"; }
       else { w = 1080; h = 1080; document.getElementById('previewBox').style.aspectRatio = "1/1"; }
       
       previewCanvas.width = w;
@@ -325,6 +402,9 @@
       drawPreview();
     }
 
+    // ==========================================
+    // UPDATE: Draw Frame Engine (Fit & Blur)
+    // ==========================================
     function drawPreview() {
       if(srcVideo.readyState < 2) return;
       
@@ -333,17 +413,22 @@
       const vw = srcVideo.videoWidth;
       const vh = srcVideo.videoHeight;
 
-      ctx.fillStyle = "#000";
-      ctx.fillRect(0, 0, w, h);
-
       const zoom = parseFloat(document.getElementById('valZoom').value);
       const panY = parseInt(document.getElementById('valPanY').value);
+      const bri = document.getElementById('valBri').value;
+      const con = document.getElementById('valCon').value;
+      const sat = document.getElementById('valSat').value;
       const blurPos = document.getElementById('valBlurPos').value; 
-      const blurHeight = parseInt(document.getElementById('valBlurHeight').value); // New UI Value
+      const blurHeight = document.getElementById('valBlurHeight').value; 
+      const textPos = document.getElementById('valTextPos').value; 
+      const textSize = document.getElementById('valTextSize').value; 
+      const txtColor = document.getElementById('valTextColor').value;
+      const sampleText = document.getElementById('recapText').value || "မြန်မာစာတန်းထိုး (Preview)";
 
       ctx.save();
       
-      let scale = Math.max(w/vw, h/vh) * zoom;
+      // ၁။ Video ကို Fit ဖြစ်အောင် တွက်ချက်ခြင်း (Math.min သုံးထားသည်)
+      let scale = Math.min(w/vw, h/vh) * zoom;
       let dw = vw * scale;
       let dh = vh * scale;
       let dx = (w - dw)/2;
@@ -354,14 +439,36 @@
         ctx.scale(-1, 1);
       }
 
+      // ၂။ အပေါ်/အောက် လွတ်နေသော နေရာများအတွက် Video အား ကြီး၍ Blur ပြုလုပ်ခြင်း
+      ctx.filter = `brightness(40%) blur(15px)`;
+      let bgScale = Math.max(w/vw, h/vh);
+      let bgDw = vw * bgScale;
+      let bgDh = vh * bgScale;
+      let bgDx = (w - bgDw)/2;
+      let bgDy = (h - bgDh)/2;
+      ctx.drawImage(srcVideo, bgDx, bgDy, bgDw, bgDh);
+
+      // ၃။ အလယ်မှ Video အစစ်ကို ထပ်တင်ခြင်း
+      ctx.filter = `brightness(${bri}%) contrast(${con}%) saturate(${sat}%)`;
       ctx.drawImage(srcVideo, dx, dy, dw, dh);
       ctx.restore();
 
-      // UI Only Preview Blur (Real blur will happen on server)
+      // ၄။ Blur Band အစစ် (အမည်းရောင်မသုံးတော့ပါ) - Preview တွင် Semi-transparent ဖြင့် ပြမည်
       const bY = (blurPos / 100) * h;
-      ctx.fillStyle = "rgba(100,100,100,0.8)";
-      ctx.fillRect(0, bY - (blurHeight/2), w, blurHeight);
+      const bH = parseInt(blurHeight);
+      ctx.fillStyle = "rgba(100, 100, 100, 0.6)"; 
+      ctx.fillRect(0, bY - (bH/2), w, bH);
 
+      // ၅။ စာတန်းထိုး
+      const tY = (textPos / 100) * h;
+      ctx.font = `bold ${textSize}px sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = "#000000";
+      ctx.strokeText(sampleText, w/2, tY);
+      ctx.fillStyle = txtColor;
+      ctx.fillText(sampleText, w/2, tY);
     }
 
     function renderLoop() {
@@ -369,6 +476,33 @@
         drawPreview();
       }
       reqAnimFrame = requestAnimationFrame(renderLoop);
+    }
+
+    // Voice Test Preview
+    function testVoicePreview() {
+      const selectedVoice = document.querySelector('input[name="ttsVoice"]:checked').value;
+      const textVal = document.getElementById('recapText').value;
+      const sampleText = textVal ? textVal : (selectedVoice === 'male' 
+        ? "မင်္ဂလာပါခင်ဗျာ၊ သီဟ အသံနဲ့ Movie Recap ဇာတ်ကြောင်းပြော အသံသွင်းပေးပါမယ်။"
+        : "မင်္ဂလာပါရှင်၊ နီလာ အသံနဲ့ စိတ်ဝင်စားစရာ ဇာတ်ကြောင်းကို အသံသွင်းပေးပါမယ်နော်။");
+
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(sampleText);
+        utter.rate = document.getElementById('valSpeed').value;
+        utter.pitch = document.getElementById('valPitch').value;
+        if(selectedVoice === 'male') utter.pitch -= 0.3; 
+        else utter.pitch += 0.3;
+        window.speechSynthesis.speak(utter);
+      } else {
+        alert("သင့်ဖုန်း Browser တွင် TTS အသံစမ်းသပ်မှု မရနိုင်ပါ။");
+      }
+    }
+
+    // AI Recap Generation
+    async function generateScript() {
+      const text = document.getElementById('recapText');
+      text.value = "Audio STT Extracting... \nGemini API Translating... \n\n'မင်္ဂလာပါ၊ ဒီဗီဒီယိုလေးမှာတော့ မမျှော်လင့်ထားတဲ့ အဖြစ်အပျက်လေးတစ်ခုကို တွေ့ရမှာပါ။ ဘာဆက်ဖြစ်မလဲ ဆက်ကြည့်ရအောင်...'";
     }
 
     // ==========================================
@@ -380,9 +514,9 @@
       if (!file) { alert("ဗီဒီယိုအရင်ရွေးပါ"); return; }
       
       const geminiKey = document.getElementById('geminiKey').value || "no_key";
+      const ratio = document.getElementById('aspectRatio').value; // Aspect Ratio ဖမ်းယူခြင်း
       const blurPos = document.getElementById('valBlurPos').value;
-      const blurHeight = document.getElementById('valBlurHeight').value;
-      const ratio = document.getElementById('aspectRatio').value;
+      const blurHeight = document.getElementById('valBlurHeight').value; // Blur Thick ဖမ်းယူခြင်း
       const ttsVoice = document.querySelector('input[name="ttsVoice"]:checked').value;
 
       isRendering = true;
@@ -393,16 +527,16 @@
       
       btn.classList.add('hidden');
       pBox.classList.remove('hidden');
-      pStat.innerText = "Server ပေါ်သို့ တင်၍ Render ပြုလုပ်နေပါသည်...";
+      pStat.innerText = "Server ပေါ်သို့ တင်၍ Render ပြုလုပ်နေပါသည် (၁ မိနစ်ခန့် စောင့်ပါ)...";
       pBar.style.width = "50%"; 
 
       const formData = new FormData();
       formData.append("video", file);
       formData.append("gemini_key", geminiKey);
       formData.append("tts_voice", ttsVoice);
-      formData.append("blur_pos", blurPos);
-      formData.append("blur_height", blurHeight);
       formData.append("ratio", ratio);
+      formData.append("blur_pos", blurPos);
+      formData.append("blur_height", blurHeight); // ဆာဗာသို့ အထူအပါး ပို့ပေးခြင်း
 
       try {
         const response = await fetch("https://ai-master-backend-2zwp.onrender.com/render", {
@@ -410,9 +544,7 @@
           body: formData
         });
 
-        if (!response.ok) {
-          throw new Error("Server error: " + response.statusText);
-        }
+        if (!response.ok) throw new Error("Server error: " + response.statusText);
 
         pStat.innerText = "Video ရရှိပါပြီ! ဒေါင်းလုဒ်လုပ်နေပါသည်...";
         pBar.style.width = "100%";
@@ -421,10 +553,10 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `AiMaster_Rendered_${Date.now()}.mp4`;
+        a.download = `AiMaster_Rendered_${Date.now()}.mp4`; // mp4 ဖြင့် ပြောင်းထားသည်
         a.click();
         
-        alert("Render အောင်မြင်စွာ ပြီးဆုံးပါပြီ။");
+        alert("Render အောင်မြင်စွာ ပြီးဆုံးပါပြီ။ တကယ့် Video အစစ်ကို ဒေါင်းလုဒ်လုပ်နေပါပြီ။");
 
       } catch (error) {
         console.error("Render failed:", error);
