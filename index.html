@@ -525,7 +525,7 @@
       text.value = "Audio STT Extracting... \nGemini API Translating... \n\n'မင်္ဂလာပါ၊ ဒီဗီဒီယိုလေးမှာတော့ မမျှော်လင့်ထားတဲ့ အဖြစ်အပျက်လေးတစ်ခုကို တွေ့ရမှာပါ။ ဘာဆက်ဖြစ်မလဲ ဆက်ကြည့်ရအောင်...'";
     }
 
-    async function startRealRender() {
+        async function startRealRender() {
       const fileInput = document.getElementById('videoInput');
       const file = fileInput.files[0];
       if (!file) { alert("ဗီဒီယိုအရင်ရွေးပါ"); return; }
@@ -533,9 +533,17 @@
       const geminiKey = document.getElementById('geminiKey').value || "no_key";
       
       const ratio = document.getElementById('aspectRatio').value;
-      const innerCrop = document.getElementById('innerCropRatio').value; // Inner Crop အသစ်
+      const innerCrop = document.getElementById('innerCropRatio').value; 
       const blurPos = document.getElementById('valBlurPos').value;
-      const blurHeight = document.getElementById('valBlurHeight').value; // Blur အထူ/အပါး
+      const blurHeight = document.getElementById('valBlurHeight').value; 
+      
+      // --- အသစ်ထပ်ထည့်ထားသော Data များ ---
+      const zoom = document.getElementById('valZoom').value;
+      const panY = document.getElementById('valPanY').value;
+      const bri = document.getElementById('valBri').value;
+      const con = document.getElementById('valCon').value;
+      const sat = document.getElementById('valSat').value;
+      const flip = isFlipped.toString(); // Flip အခြေအနေ
       
       const ttsVoice = document.querySelector('input[name="ttsVoice"]:checked').value;
 
@@ -558,6 +566,14 @@
       formData.append("inner_crop", innerCrop);
       formData.append("blur_pos", blurPos);
       formData.append("blur_height", blurHeight);
+      
+      // --- ဆာဗာသို့ အသစ်ပို့မည့် Data များ ---
+      formData.append("zoom", zoom);
+      formData.append("pan_y", panY);
+      formData.append("bri", bri);
+      formData.append("con", con);
+      formData.append("sat", sat);
+      formData.append("flip", flip);
 
       try {
         const response = await fetch("https://ai-master-backend-2zwp.onrender.com/render", {
